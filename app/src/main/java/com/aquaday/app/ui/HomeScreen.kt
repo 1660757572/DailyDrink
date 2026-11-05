@@ -48,7 +48,6 @@ import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
 import com.itos.coui.theme.CouiTheme
-import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
@@ -161,6 +160,8 @@ fun HomeScreen(
             backdrop = backdrop,
             dark = dark,
         )
+        // 卡片内边距只有 16dp，按钮下方要多留一点，视觉重心才不会被底边挤住。
+        Spacer(Modifier.height(6.dp))
     }
 
     Spacer(Modifier.height(18.dp))
@@ -168,7 +169,7 @@ fun HomeScreen(
     AquaCard {
         val settings = metrics.snapshot.settings
         val anchor = metrics.snapshot.reminderAnchor
-        val idleMinutes = if (anchor == null) 0L else ChronoUnit.MINUTES.between(anchor, LocalDateTime.now()).coerceAtLeast(0L)
+        val idleMinutes = if (anchor == null) 0L else ChronoUnit.MINUTES.between(anchor, state.now).coerceAtLeast(0L)
         AquaRow(
             title = if (settings.enabled) {
                 stringResource(R.string.home_next_reminder, state.nextReminderAt?.asClock() ?: "--:--")
@@ -237,7 +238,7 @@ fun HomeScreen(
                     pendingDelete = null
                 },
                 style = CouiDialogActionStyle.Primary,
-                colors = CouiDialogDefaults.primaryActionColors(MaterialTheme.colorScheme.error),
+                colors = CouiDialogDefaults.primaryActionColors(AquaDanger),
             ),
             dismissAction = CouiDialogAction(
                 text = stringResource(R.string.action_cancel),

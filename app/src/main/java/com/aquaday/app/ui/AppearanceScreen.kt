@@ -40,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.aquaday.app.R
 import com.aquaday.app.data.ColorStyle
+import com.aquaday.app.data.MAX_BLUR_DP
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaChip
@@ -58,6 +61,7 @@ import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.aquaday.app.ui.components.AquaSegmented
+import com.aquaday.app.ui.components.AquaSliderRow
 import com.aquaday.app.ui.components.AquaTileShape
 import com.itos.coui.dialog.CouiAlertDialog
 import com.itos.coui.dialog.CouiDialogAction
@@ -66,6 +70,7 @@ import com.itos.coui.dialog.CouiDialogDefaults
 import com.itos.coui.slider.CouiSlider
 import com.itos.coui.theme.CouiTheme
 import java.util.Locale
+import kotlin.math.roundToInt
 
 @Composable
 fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
@@ -76,6 +81,8 @@ fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
     }
     var showColorWarning by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
+    var scrimDraft by remember(snapshot.backgroundScrim) { mutableFloatStateOf(snapshot.backgroundScrim * 100f) }
+    var blurDraft by remember(snapshot.backgroundBlur) { mutableFloatStateOf(snapshot.backgroundBlur) }
 
     AquaSectionTitle(stringResource(R.string.appearance_section_mode))
     AquaCard {
@@ -172,7 +179,7 @@ fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
     AquaSectionTitle(stringResource(R.string.appearance_section_background))
     AquaCard {
         Column {
-            BackgroundPreview(imagePath)
+            BackgroundPreview(imagePath, snapshot.backgroundScrim, snapshot.backgroundBlur)
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AquaChip(
@@ -198,6 +205,31 @@ fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (imagePath != null) {
+                Spacer(Modifier.height(6.dp))
+                AquaDivider()
+                AquaSliderRow(
+                    title = stringResource(R.string.setting_background_scrim),
+                    value = scrimDraft,
+                    onValueChange = { scrimDraft = it },
+                    onValueChangeFinished = { viewModel.setBackgroundScrim(scrimDraft.roundToInt()) },
+                    valueRange = 0f..95f,
+                    steps = 18,
+                    valueText = "${scrimDraft.roundToInt()}%",
+                    summary = stringResource(R.string.setting_background_scrim_summary),
+                )
+                AquaDivider()
+                AquaSliderRow(
+                    title = stringResource(R.string.setting_background_blur),
+                    value = blurDraft,
+                    onValueChange = { blurDraft = it },
+                    onValueChangeFinished = { viewModel.setBackgroundBlur(blurDraft.roundToInt()) },
+                    valueRange = 0f..MAX_BLUR_DP,
+                    steps = 29,
+                    valueText = "${blurDraft.roundToInt()} dp",
+                    summary = stringResource(R.string.setting_background_blur_summary),
+                )
+            }
         }
     }
 
@@ -415,7 +447,7 @@ private fun CustomColorPickerDialog(
 }
 
 @Composable
-private fun BackgroundPreview(path: String?) {
+private fun BackgroundPreview(path: String?, scrim: Float, blur: Float) {
     val image = path?.let { rememberBackgroundBitmap(it) }
     Box(
         Modifier
@@ -436,13 +468,15 @@ private fun BackgroundPreview(path: String?) {
             Image(
                 bitmap = image,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (blur > 0f) Modifier.blur(blur.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded) else Modifier),
                 contentScale = ContentScale.Crop,
             )
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.35f)),
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = scrim.coerceIn(0f, 1f))),
             )
         }
     }

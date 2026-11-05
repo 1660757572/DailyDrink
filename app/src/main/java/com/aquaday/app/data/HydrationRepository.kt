@@ -85,6 +85,10 @@ class HydrationRepository(private val context: Context) {
         write = store::setBackgroundImage,
     )
 
+    suspend fun setBackgroundScrim(percent: Int) = store.setBackgroundScrim(percent)
+
+    suspend fun setBackgroundBlur(dp: Int) = store.setBackgroundBlur(dp)
+
     suspend fun setNickname(nickname: String) = store.setNickname(nickname)
 
     /** 头像与背景同一套落盘逻辑，只是前缀不同。 */

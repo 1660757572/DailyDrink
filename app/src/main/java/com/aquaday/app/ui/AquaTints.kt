@@ -16,3 +16,9 @@ internal val TintTheme = Color(0xFF7A6FE0)
 internal val TintBackground = Color(0xFF5E9B7A)
 internal val TintReset = Color(0xFFD05C5C)
 internal val TintAbout = Color(0xFF8A8F98)
+
+/**
+ * 破坏性操作的填充色。M3 的 error 在深色下是浅粉，白字几乎看不清；
+ * 这里固定成高饱和红，两个主题共用。
+ */
+internal val AquaDanger = Color(0xFFE5322B)

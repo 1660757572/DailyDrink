@@ -21,6 +21,7 @@ import java.time.YearMonth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -32,6 +33,8 @@ data class AquaUiState(
     val selectedDate: LocalDate = LocalDate.now(),
     val permissions: AquaPermissions = AquaPermissions(notifications = false, exactAlarms = false),
     val nextReminderAt: LocalDateTime? = null,
+    /** 由心跳推进的当前时间，让"距上次活动"和下次提醒随时间走动。 */
+    val now: LocalDateTime = LocalDateTime.now(),
     val message: String? = null,
 )
 
@@ -54,6 +57,19 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
                         permissions = repository.permissions(),
                         nextReminderAt = repository.nextReminderAt(metrics),
                         message = fresh.lastOrNull()?.let { "解锁成就 · ${it.achievement.title}" } ?: previous.message,
+                    )
+                }
+            }
+        }
+        // 下一次提醒只在数据变化时算一次会停在旧时间，心跳保证分钟级刷新。
+        viewModelScope.launch {
+            while (true) {
+                delay(TICK_MS)
+                val now = LocalDateTime.now()
+                _state.update { previous ->
+                    previous.copy(
+                        now = now,
+                        nextReminderAt = previous.metrics?.let { repository.nextReminderAt(it) },
                     )
                 }
             }
@@ -83,6 +99,10 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
     fun setCustomAccent(argb: Int) = viewModelScope.launch { repository.setCustomAccent(argb) }
 
     fun setBackgroundImage(uri: android.net.Uri?) = viewModelScope.launch { repository.setBackgroundImage(uri) }
+
+    fun setBackgroundScrim(percent: Int) = viewModelScope.launch { repository.setBackgroundScrim(percent) }
+
+    fun setBackgroundBlur(dp: Int) = viewModelScope.launch { repository.setBackgroundBlur(dp) }
 
     fun setAvatarImage(uri: android.net.Uri?) = viewModelScope.launch { repository.setAvatarImage(uri) }
 
@@ -122,4 +142,8 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
 
     fun eventsOn(date: LocalDate): List<DrinkEvent> =
         _state.value.metrics?.snapshot?.events.orEmpty().filter { it.at.toLocalDate() == date }
+
+    private companion object {
+        const val TICK_MS = 15_000L
+    }
 }

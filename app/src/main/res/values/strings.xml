@@ -46,7 +46,7 @@
     <string name="home_reached_banner">今日目标已达成，再多喝一杯算奖励</string>
     <string name="home_log_entry">%1$s · %2$d ml · %3$s</string>
     <string name="home_progress_value">%1$d / %2$d ml</string>
-    <string name="home_goal_line">目标 %1$d ml · 完成 %2$d%%</string>
+    <string name="home_goal_line">目标 %1$d ml\n完成 %2$d%%</string>
 
     <string name="calendar_title">达标日历</string>
     <string name="calendar_summary">%1$d / %2$d 天达标 · 本月 %3$d ml</string>
@@ -89,8 +89,9 @@
     <string name="mine_subpage_permission">系统权限</string>
     <string name="mine_subpage_appearance">外观</string>
     <string name="mine_reminder_summary">每 %1$d 分钟 · %2$s - %3$s</string>
-    <string name="mine_permission_summary_ready">通知与精确闹钟均已开启</string>
-    <string name="mine_permission_summary_missing">%1$d 项权限待开启</string>
+    <string name="mine_permission_summary_ready">通知、精确闹钟等权限管理 · 均已开启</string>
+    <string name="mine_permission_summary_missing">通知、精确闹钟等权限管理 · %1$d 项待开启</string>
+    <string name="mine_appearance_guide">深浅色、强调色与背景</string>
     <string name="mine_appearance_dynamic">动态取色</string>
     <string name="mine_appearance_background">背景图片</string>
     <string name="appearance_section_mode">外观模式</string>
@@ -111,6 +112,10 @@
     <string name="color_hue">色相</string>
     <string name="color_saturation">饱和度</string>
     <string name="setting_background_summary">图片保存在应用内，并叠加半透明遮罩保证文字可读</string>
+    <string name="setting_background_scrim">遮罩不透明度</string>
+    <string name="setting_background_scrim_summary">遮罩越不透明，卡片和文字越清晰</string>
+    <string name="setting_background_blur">高斯模糊</string>
+    <string name="setting_background_blur_summary">柔化背景图片的细节，让前景更安静</string>
     <string name="action_choose_image">选择图片</string>
     <string name="action_remove_image">移除背景</string>
     <string name="background_empty">未设置背景图片</string>
@@ -147,7 +152,46 @@
     <string name="setting_exact_alarm_granted_summary">提醒按设定时间准点触发</string>
     <string name="permission_granted">已开启</string>
     <string name="setting_about">关于</string>
-    <string name="setting_about_summary">水杯 · 界面组件由 COUI-Kit 提供，还原 ColorOS 17 的悬浮底栏与渐进式模糊</string>
+    <string name="setting_about_summary">版本、技术栈与开源许可</string>
+
+    <string name="about_slogan">每天一杯水，把喝水这件小事坚持下来</string>
+    <string name="about_version_tag">版本 %1$s</string>
+    <string name="about_section_help">使用帮助</string>
+    <string name="about_section_stack">技术栈</string>
+    <string name="about_section_info">应用信息</string>
+    <string name="about_help_log_title">记录喝水</string>
+    <string name="about_help_log_body">首页的快捷容量一点即记，「记一杯」可以改容量、饮品和时间。</string>
+    <string name="about_help_reminder_title">定时提醒</string>
+    <string name="about_help_reminder_body">按间隔与活跃时段提醒，通知里可以直接确认或稍后提醒。</string>
+    <string name="about_help_progress_title">成就与日历</string>
+    <string name="about_help_progress_body">每笔记录都会累计进度，日历能回看每天是否达标。</string>
+    <string name="about_help_style_title">个性化</string>
+    <string name="about_help_style_body">在「我的 → 个人信息 / 外观」里改昵称头像、主题色与背景。</string>
+    <string name="about_stack_ui_label">界面</string>
+    <string name="about_stack_ui">Jetpack Compose · COUI-Kit</string>
+    <string name="about_stack_lang_label">语言</string>
+    <string name="about_stack_lang">Kotlin · Coroutines · StateFlow</string>
+    <string name="about_stack_data_label">存储</string>
+    <string name="about_stack_data">DataStore Preferences</string>
+    <string name="about_stack_alarm_label">提醒</string>
+    <string name="about_stack_alarm">AlarmManager · WorkManager</string>
+    <string name="setting_about_version">版本信息</string>
+    <string name="about_version_line">%1$s（versionCode %2$d）</string>
+    <string name="about_repo">GitHub 仓库</string>
+    <string name="about_repo_summary">查看源码、问题反馈与更新</string>
+    <string name="about_open_repo">打开 GitHub 仓库</string>
+    <string name="about_feedback">提交反馈</string>
+    <string name="about_share">分享应用</string>
+    <string name="about_share_text">水杯 · 一个按 ColorOS 17 风格做的喝水提醒应用\n%1$s</string>
+    <string name="about_license">开源许可</string>
+    <string name="about_license_summary">本项目以 MIT License 开源</string>
+    <string name="about_license_body">MIT License\n\nCopyright (c) 2026 KUMAKI\n\n特此免费授予任何获得本软件及相关文档文件副本的人不受限制地处理本软件的权利，包括但不限于使用、复制、修改、合并、发布、分发、再许可和/或销售本软件副本的权利，并允许获得本软件的人在符合下列条件的前提下这样做：\n\n上述版权声明和本许可声明应包含在本软件的所有副本或主要部分中。\n\n本软件按「原样」提供，不附带任何明示或暗示的担保，包括但不限于适销性、特定用途适用性和非侵权性的担保。在任何情况下，作者或版权持有人均不对任何索赔、损害或其他责任负责，无论是在合同诉讼、侵权行为还是其他方面，由本软件或本软件的使用或其他交易引起、产生或与之相关。</string>
+    <string name="about_third_party">第三方开源许可</string>
+    <string name="about_third_party_summary">AndroidX、Compose、Kotlin 等组件</string>
+    <string name="about_third_party_body">AndroidX / Jetpack Compose —— Apache License 2.0\nKotlin 与 kotlinx.coroutines —— Apache License 2.0\nMaterial Icons —— Apache License 2.0\nCOUI-Kit —— 界面组件库，遵循其上游仓库声明的许可\n\n以上组件均按其各自许可条款分发，完整文本可在对应项目仓库中查阅。</string>
+    <string name="about_developer">开发人员</string>
+    <string name="about_developer_name">KUMAKI</string>
+    <string name="about_footer">© 2026 KUMAKI · MIT License</string>
 
     <string name="renderer_error">浮动材质渲染器不可用：%1$s</string>
 

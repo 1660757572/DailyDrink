@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -26,6 +28,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.data.ColorStyle
+import com.aquaday.app.data.DEFAULT_SCRIM
 import com.aquaday.app.data.ThemeMode
 import com.itos.coui.shape.CouiShape
 import com.itos.coui.theme.CouiColorScheme
@@ -187,24 +190,30 @@ object AquaShapes {
     val chip = CouiShape(12.dp)
 }
 
-/** 纯色页面底：浅色 #F0F1F3、深色纯黑；设置背景图片后叠加半透明遮罩保底可读性。 */
+/** 纯色页面底：浅色 #F0F1F3、深色纯黑；设置背景图片后叠加可调遮罩与模糊保底可读性。 */
 @Composable
-fun AquaPageBackground(dark: Boolean, backgroundImage: String? = null, modifier: Modifier = Modifier) {
+fun AquaPageBackground(
+    dark: Boolean,
+    backgroundImage: String? = null,
+    scrim: Float = DEFAULT_SCRIM,
+    blur: Float = 0f,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier.background(if (dark) Color.Black else Color(0xFFF0F1F3))) {
         if (backgroundImage == null) return@Box
         val bitmap = rememberBackgroundBitmap(backgroundImage) ?: return@Box
         Image(
             bitmap = bitmap,
             contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (blur > 0f) Modifier.blur(blur.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded) else Modifier),
             contentScale = ContentScale.Crop,
         )
         Box(
             Modifier
                 .fillMaxSize()
-                .background(
-                    if (dark) Color.Black.copy(alpha = 0.62f) else Color(0xFFF0F1F3).copy(alpha = 0.55f),
-                ),
+                .background((if (dark) Color.Black else Color(0xFFF0F1F3)).copy(alpha = scrim.coerceIn(0f, 1f))),
         )
     }
 }

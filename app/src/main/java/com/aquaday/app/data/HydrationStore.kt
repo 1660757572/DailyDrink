@@ -38,6 +38,8 @@ private object AquaKeys {
     val COLOR_STYLE = intPreferencesKey("color_style")
     val CUSTOM_ACCENT = intPreferencesKey("custom_accent")
     val BACKGROUND_IMAGE = stringPreferencesKey("background_image")
+    val BACKGROUND_SCRIM = intPreferencesKey("background_scrim")
+    val BACKGROUND_BLUR = intPreferencesKey("background_blur")
     val ONBOARDED = intPreferencesKey("onboarded")
     val NICKNAME = stringPreferencesKey("nickname")
     val AVATAR_IMAGE = stringPreferencesKey("avatar_image")
@@ -84,6 +86,8 @@ class HydrationStore(context: Context) {
                     ?: if ((prefs[AquaKeys.DYNAMIC_COLOR] ?: 0) == 1) ColorStyle.Dynamic else ColorStyle.Default,
                 customAccent = prefs[AquaKeys.CUSTOM_ACCENT],
                 backgroundImage = prefs[AquaKeys.BACKGROUND_IMAGE]?.takeIf { it.isNotBlank() },
+                backgroundScrim = (prefs[AquaKeys.BACKGROUND_SCRIM] ?: (DEFAULT_SCRIM * 100).toInt()) / 100f,
+                backgroundBlur = (prefs[AquaKeys.BACKGROUND_BLUR] ?: 0).toFloat(),
                 onboarded = (prefs[AquaKeys.ONBOARDED] ?: 0) == 1,
                 nickname = prefs[AquaKeys.NICKNAME].orEmpty(),
                 avatarImage = prefs[AquaKeys.AVATAR_IMAGE]?.takeIf { it.isNotBlank() },
@@ -149,6 +153,14 @@ class HydrationStore(context: Context) {
         store.edit { prefs ->
             if (path == null) prefs.remove(AquaKeys.BACKGROUND_IMAGE) else prefs[AquaKeys.BACKGROUND_IMAGE] = path
         }
+    }
+
+    suspend fun setBackgroundScrim(percent: Int) {
+        store.edit { it[AquaKeys.BACKGROUND_SCRIM] = percent.coerceIn(0, 95) }
+    }
+
+    suspend fun setBackgroundBlur(dp: Int) {
+        store.edit { it[AquaKeys.BACKGROUND_BLUR] = dp.coerceIn(0, MAX_BLUR_DP.toInt()) }
     }
 
     suspend fun setOnboarded(completed: Boolean) {

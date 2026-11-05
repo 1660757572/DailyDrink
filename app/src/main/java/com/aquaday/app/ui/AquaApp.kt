@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -89,6 +90,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aquaday.app.R
 import com.aquaday.app.data.Achievements
 import com.aquaday.app.data.ColorStyle
+import com.aquaday.app.data.DEFAULT_SCRIM
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaAddSheet
@@ -120,6 +122,7 @@ private enum class AquaSubpage(val titleRes: Int) {
     Permission(R.string.mine_subpage_permission),
     Appearance(R.string.mine_subpage_appearance),
     Profile(R.string.mine_subpage_profile),
+    About(R.string.setting_about),
 }
 
 /** 徽章详情路由：单例对象，滑动切换徽章时不改变路由，避免重复过场动画。 */
@@ -180,7 +183,10 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
         if (medalFilter <= 0) state.achievements
         else state.achievements.filter { it.achievement.category == Achievements.categories[medalFilter - 1] }
     }
-    val backgroundImage = state.metrics?.snapshot?.backgroundImage
+    val shellSnapshot = state.metrics?.snapshot
+    val backgroundImage = shellSnapshot?.backgroundImage
+    val backgroundScrim = shellSnapshot?.backgroundScrim ?: DEFAULT_SCRIM
+    val backgroundBlur = shellSnapshot?.backgroundBlur ?: 0f
     var backProgress by remember { mutableFloatStateOf(0f) }
     PredictiveBackHandler(enabled = inSubpage) { progress ->
         try {
@@ -238,7 +244,13 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
             Box(Modifier.fillMaxSize().couiBackdrop(backdrop)) {
                 // 只录制背景：页面里的按钮与胶囊采样这一层，采样方与被采样方互为兄弟。
                 Box(Modifier.fillMaxSize().couiBackdrop(pageBackdrop)) {
-                    AquaPageBackground(dark = dark, backgroundImage = backgroundImage, modifier = Modifier.fillMaxSize())
+                    AquaPageBackground(
+                        dark = dark,
+                        backgroundImage = backgroundImage,
+                        scrim = backgroundScrim,
+                        blur = backgroundBlur,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
                 AnimatedContent(
                     targetState = route,
@@ -311,6 +323,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                     onOpenReminder = { subpageIndex = AquaSubpage.Reminder.ordinal },
                                     onOpenPermission = { subpageIndex = AquaSubpage.Permission.ordinal },
                                     onOpenAppearance = { subpageIndex = AquaSubpage.Appearance.ordinal },
+                                    onOpenAbout = { subpageIndex = AquaSubpage.About.ordinal },
                                     sharedTransitionScope = this@SharedTransitionLayout,
                                     animatedVisibilityScope = animatedVisibilityScope,
                                 )
@@ -318,6 +331,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                 AquaSubpage.Permission -> PermissionSettingsScreen(state, viewModel)
                                 AquaSubpage.Appearance -> AppearanceScreen(state, viewModel)
                                 AquaSubpage.Profile -> ProfileScreen(state, viewModel)
+                                AquaSubpage.About -> AboutScreen()
                                 else -> MedalDetailScreen(
                                     medalItems,
                                     medalStart,
@@ -399,6 +413,7 @@ internal object AquaSharedKeys {
     const val Permission = "aqua-shared-permission"
     const val Appearance = "aqua-shared-appearance"
     const val Profile = "aqua-shared-profile"
+    const val About = "aqua-shared-about"
 }
 
 /** 二级页顶部的大标题与「我的」入口共用同一枚图标，进入时由共享元素接续。 */
@@ -457,6 +472,7 @@ private fun AquaSubpage.sharedKey(): String = when (this) {
     AquaSubpage.Permission -> AquaSharedKeys.Permission
     AquaSubpage.Appearance -> AquaSharedKeys.Appearance
     AquaSubpage.Profile -> AquaSharedKeys.Profile
+    AquaSubpage.About -> AquaSharedKeys.About
 }
 
 private fun AquaSubpage.icon(): ImageVector = when (this) {
@@ -464,6 +480,7 @@ private fun AquaSubpage.icon(): ImageVector = when (this) {
     AquaSubpage.Permission -> Icons.Filled.NotificationsActive
     AquaSubpage.Appearance -> Icons.Filled.DarkMode
     AquaSubpage.Profile -> Icons.Filled.Person
+    AquaSubpage.About -> Icons.Filled.Info
 }
 
 private fun AquaSubpage.tint(): Color = when (this) {
@@ -471,6 +488,7 @@ private fun AquaSubpage.tint(): Color = when (this) {
     AquaSubpage.Permission -> TintPermission
     AquaSubpage.Appearance -> TintTheme
     AquaSubpage.Profile -> TintProfile
+    AquaSubpage.About -> TintAbout
 }
 
 /** 折叠顶栏：页面顶部是随内容滚动的大标题，滚出后由顶栏内的小标题接替。 */
@@ -537,11 +555,12 @@ private fun AquaTopBarContent(
 
 /**
  * CouiBottomBar 把胶囊宽度写死成「可用宽度 - 136dp」（为左右附件各留 56dp），
- * 手机上四项摊下来每项只剩六十来 dp。这里按多 48dp 测量并向左放置：
+ * 手机上四项摊下来每项只剩六十来 dp。这里整体加宽并向左放置：
  * 多出来的宽度全给胶囊，FAB 与胶囊右端位置不变，左附件槽位本来为空，被裁掉也看不出。
+ * 其中 48dp 用来拉长胶囊，另外 19dp 把胶囊左缘推到与 FAB 右缘相同的屏幕边距。
  */
 private fun Modifier.widenFloatBar(): Modifier = layout { measurable, constraints ->
-    val extra = 48.dp.roundToPx()
+    val extra = 67.dp.roundToPx()
     val width = constraints.maxWidth + extra
     val placeable = measurable.measure(
         Constraints(

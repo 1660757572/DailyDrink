@@ -57,6 +57,7 @@ fun MineScreen(
     onOpenReminder: () -> Unit,
     onOpenPermission: () -> Unit,
     onOpenAppearance: () -> Unit,
+    onOpenAbout: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
@@ -70,6 +71,7 @@ fun MineScreen(
     val reminderIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Reminder)
     val permissionIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Permission)
     val appearanceIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Appearance)
+    val aboutIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.About)
 
     AquaCard(contentPadding = false) {
         Row(
@@ -204,6 +206,9 @@ fun MineScreen(
                 summary = stringResource(R.string.setting_about_summary),
                 icon = Icons.Filled.Info,
                 iconTint = TintAbout,
+                iconModifier = aboutIcon,
+                onClick = onOpenAbout,
+                trailing = { Chevron() },
             )
         }
     }
@@ -228,7 +233,7 @@ fun MineScreen(
                     viewModel.resetAll()
                 },
                 style = CouiDialogActionStyle.Primary,
-                colors = CouiDialogDefaults.primaryActionColors(MaterialTheme.colorScheme.error),
+                colors = CouiDialogDefaults.primaryActionColors(AquaDanger),
             ),
             dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = { showReset = false }),
         )
@@ -257,6 +262,7 @@ private fun sharedIconModifier(
 @Composable
 private fun appearanceSummary(mode: ThemeMode, colorStyle: ColorStyle, hasBackground: Boolean): String {
     val parts = buildList {
+        add(stringResource(R.string.mine_appearance_guide))
         add(
             stringResource(
                 when (mode) {

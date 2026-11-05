@@ -1,2 +1,123 @@
-# DailyDrink
-一款轻量化喝水提醒App，定时推送喝水通知，记录每日饮水量，自定义提醒时间与目标水量。
+# DailyDrink · 水杯
+
+一款轻量、无广告、数据完全本地的喝水提醒 App。界面基于 ColorOS 17 的 COUI-Kit 风格重做，支持定时提醒、实时活动、达标日历与成就系统。
+
+[![Platform](https://img.shields.io/badge/Android-31%2B-3DDC84?logo=android&logoColor=white)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+## 界面预览
+
+| 首页 | 日历 |
+| :---: | :---: |
+| <img src="docs/screenshots/home.png" width="300" alt="首页" /> | <img src="docs/screenshots/calendar.png" width="300" alt="日历" /> |
+| **成就** | **我的** |
+| <img src="docs/screenshots/achievements.png" width="300" alt="成就" /> | <img src="docs/screenshots/mine.png" width="300" alt="我的" /> |
+
+> 外观设置：深/浅色、Material You 动态取色、自定义背景图片
+
+<img src="docs/screenshots/appearance.png" width="300" alt="外观设置" />
+
+## 功能
+
+### 记录饮水
+- 首页「记一杯」按默认容量一键记录，快捷按钮支持 +150 / +200 / +300 / +500 ml
+- 「记一杯」弹窗可选择容量、饮品类型与记录时间，忘记记录时可补记（时间选择器只允许选今天已过去的时刻）
+- 内置白水、淡茶、牛奶、汤品、咖啡、饮料等类型，可按补水系数折算有效补水，并支持自定义饮品
+- 今日记录可单条删除，首页圆环展示已喝、还差、连续天数
+
+### 目标与日历
+- 每日饮水量目标、默认一杯容量可随时调整
+- 达标日历按月查看每日达标情况，今日时间线按时间倒序展示当天记录
+
+### 提醒与实时活动
+- 定时提醒：可设置提醒间隔、开始/结束时间、提示音与震动
+- 提醒通知提供「确认 X ml」「稍后 10 分钟」两个按钮，直接完成记录或推迟
+- 常驻实时活动展示今日进度、倒计时与两键操作，ColorOS 上以流体云胶囊/卡片呈现
+- 开机自动恢复提醒计划，权限缺失时在「我的 → 系统权限」中引导开启
+
+### 成就系统
+- 20 枚成就徽章，分为今日 / 坚持 / 总量 / 习惯 / 特别等分类，使用 COUI ChipTab 横向切换
+- 展示点亮进度、累计补水、最长连续与总杯数
+
+### 个性化
+- 深色 / 浅色 / 跟随系统，深色为纯黑、浅色为 #F0F1F3 纯色底
+- Material You 动态取色，从系统壁纸提取主色调
+- 支持选择本地图片作为页面背景（图片保存在应用私有目录，并叠加遮罩保证文字可读）
+- 首启引导：欢迎、每日目标、提醒、权限四步完成初始化
+
+## 技术栈
+
+| 项目 | 说明 |
+| --- | --- |
+| 语言 | Kotlin 2.4 |
+| UI | Jetpack Compose（BOM 2026.08.01）+ Material 3 |
+| 设计体系 | COUI-Kit 0.0.1-alpha4（ColorOS 17 液态玻璃组件，`io.github.itoseo:coui`） |
+| 构建 | AGP 9.4.1 / Gradle 9.8.2 / JDK 17 |
+| 存储 | DataStore Preferences（全部数据仅存本机） |
+| 提醒 | AlarmManager + WorkManager + 通知渠道 |
+| SDK | minSdk 31 · targetSdk 37 · compileSdk 37 |
+
+## 构建
+
+环境要求：JDK 17、Android SDK 37。
+
+```bash
+# Debug
+./gradlew :app:assembleDebug
+# 产物：app/build/outputs/apk/debug/app-debug.apk
+
+# Release
+./gradlew :app:assembleRelease
+# 产物：app/build/outputs/apk/release/app-release.apk
+```
+
+直接安装到设备：
+
+```bash
+adb install -r app/build/outputs/apk/release/app-release.apk
+```
+
+### 发布签名
+
+仓库不包含签名材料。在项目根目录创建 `keystore.properties` 后，Release 构建会自动签名：
+
+```properties
+storeFile=keystore/aquaday-release.jks
+storePassword=你的密码
+keyAlias=aquaday
+keyPassword=你的密码
+```
+
+`keystore.properties`、`keystore/` 与 `*.jks` 已在 `.gitignore` 中排除，请自行备份密钥；文件缺失时 Release 构建为未签名包。Debug 包与 Release 包签名不同，互相覆盖安装需先卸载。
+
+## 权限说明
+
+| 权限 | 用途 |
+| --- | --- |
+| `POST_NOTIFICATIONS` | 发送喝水提醒与实时活动通知 |
+| `POST_PROMOTED_NOTIFICATIONS` | 实时活动提升为常驻通知，供系统流体云展示 |
+| `SCHEDULE_EXACT_ALARM` | 按设定时间准点提醒 |
+| `VIBRATE` | 提醒时震动 |
+| `WAKE_LOCK` | 后台准时触发提醒 |
+| `RECEIVE_BOOT_COMPLETED` | 重启后恢复提醒计划 |
+
+所有饮水记录与设置仅保存在本机 DataStore 中，App 不联网、不上传任何数据。
+
+## 项目结构
+
+```
+app/src/main/java/com/aquaday/app/
+├── data/        # DataStore、指标计算、成就定义
+├── reminder/    # 通知渠道、Alarm/Work 调度、实时活动、开机恢复
+└── ui/          # 页面、主题与组件（首页/日历/成就/我的/引导/设置）
+```
+
+## 下载
+
+前往 [Releases](https://github.com/1660757572/DailyDrink/releases/latest) 下载最新 APK。
+
+## 许可证
+
+[MIT](LICENSE) © 2026 KUMAKI

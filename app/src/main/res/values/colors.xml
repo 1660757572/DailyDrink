@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="aqua_launcher_background">#FFFFFFFF</color>
+    <color name="aqua_window_background">#FFF0F1F3</color>
+</resources>

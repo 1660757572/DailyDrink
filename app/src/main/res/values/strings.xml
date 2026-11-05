@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">水杯</string>
+
+    <string name="tab_home">首页</string>
+    <string name="tab_calendar">日历</string>
+    <string name="tab_medal">成就</string>
+    <string name="tab_mine">我的</string>
+    <string name="live_activity_channel">喝水实时活动</string>
+
+    <string name="action_add">记一杯</string>
+    <string name="action_theme">切换深浅色</string>
+    <string name="action_undo">撤销</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_confirm">确定</string>
+    <string name="action_grant">去开启</string>
+    <string name="action_back">返回</string>
+
+    <string name="notif_reminder_title">该喝水啦</string>
+    <string name="notif_reminder_body">今日 %1$d / %2$d ml · 已 %3$d 分钟没喝水</string>
+    <string name="notif_reminder_body_fresh">今日 %1$d / %2$d ml，记得补一杯</string>
+    <string name="notif_confirm">确认 %1$d ml</string>
+    <string name="notif_snooze">稍后 %1$d 分钟</string>
+    <string name="notif_achievement_title">解锁成就 · %1$s</string>
+
+    <string name="live_reached">今日已达标 %1$d ml</string>
+    <string name="live_remaining">还差 %1$d ml 达标</string>
+    <string name="live_body">%1$d / %2$d ml · 连续 %3$d 天 · 共 %4$d 杯</string>
+    <string name="live_chip_remaining">%1$dml</string>
+    <string name="live_chip_reached">已达标</string>
+
+    <string name="home_goal_prefix">目标</string>
+    <string name="home_drunk">已喝</string>
+    <string name="home_remaining_prefix">还差</string>
+    <string name="home_streak_prefix">连续</string>
+    <string name="home_cup_count">%1$d 杯</string>
+    <string name="home_streak_value">%1$d 天</string>
+    <string name="home_quick_add">快速记录</string>
+    <string name="home_today_log">今日记录</string>
+    <string name="home_empty_log">还没有记录，选一个杯子开始今天的第一杯</string>
+    <string name="home_next_reminder">下次提醒 %1$s</string>
+    <string name="home_reminder_paused">提醒已暂停</string>
+    <string name="home_reached_banner">今日目标已达成，再多喝一杯算奖励</string>
+    <string name="home_log_entry">%1$s · %2$d ml · %3$s</string>
+    <string name="home_progress_value">%1$d / %2$d ml</string>
+    <string name="home_goal_line">目标 %1$d ml · 完成 %2$d%%</string>
+
+    <string name="calendar_title">达标日历</string>
+    <string name="calendar_summary">%1$d / %2$d 天达标 · 本月 %3$d ml</string>
+    <string name="calendar_legend_reached">达标</string>
+    <string name="calendar_legend_partial">未达标</string>
+    <string name="calendar_legend_empty">无记录</string>
+    <string name="calendar_day_title">%1$s · %2$d ml</string>
+    <string name="calendar_day_empty">这一天还没有记录</string>
+    <string name="calendar_month_format">yyyy 年 M 月</string>
+    <string name="calendar_future_hint">未来的日期暂不可记录</string>
+
+    <string name="medal_progress">已点亮 %1$d / %2$d</string>
+    <string name="medal_unlocked_time">%1$s 点亮</string>
+    <string name="medal_complete_rate">完成度 %1$d%%</string>
+    <string name="medal_current_streak">当前连续 %1$d 天</string>
+    <string name="medal_total_volume">累计补水 %1$s L</string>
+
+    <string name="mine_section_target">每日目标</string>
+    <string name="mine_section_reminder">提醒</string>
+    <string name="mine_section_appearance">外观</string>
+    <string name="mine_section_settings">设置</string>
+    <string name="mine_subpage_reminder">提醒</string>
+    <string name="mine_subpage_permission">系统权限</string>
+    <string name="mine_subpage_appearance">外观</string>
+    <string name="mine_reminder_summary">每 %1$d 分钟 · %2$s - %3$s</string>
+    <string name="mine_permission_summary_ready">通知与精确闹钟均已开启</string>
+    <string name="mine_permission_summary_missing">%1$d 项权限待开启</string>
+    <string name="mine_appearance_dynamic">动态取色</string>
+    <string name="mine_appearance_background">背景图片</string>
+    <string name="appearance_section_mode">外观模式</string>
+    <string name="appearance_section_color">颜色</string>
+    <string name="appearance_section_background">背景</string>
+    <string name="setting_dynamic_color">动态取色</string>
+    <string name="setting_dynamic_color_summary">从系统壁纸提取主色调（Material You）</string>
+    <string name="setting_background_summary">图片保存在应用内，并叠加半透明遮罩保证文字可读</string>
+    <string name="action_choose_image">选择图片</string>
+    <string name="action_remove_image">移除背景</string>
+    <string name="background_empty">未设置背景图片</string>
+    <string name="mine_section_data">数据</string>
+    <string name="setting_goal">每日饮水量目标</string>
+    <string name="setting_goal_summary">当前 %1$d ml</string>
+    <string name="setting_default_cup">默认一杯容量</string>
+    <string name="setting_default_cup_summary">首页「记一杯」与通知按钮按此容量记录</string>
+    <string name="setting_reminder_on">定时提醒</string>
+    <string name="setting_reminder_summary">活跃时段内按间隔提醒</string>
+    <string name="setting_interval">提醒间隔</string>
+    <string name="setting_interval_summary">每 %1$d 分钟</string>
+    <string name="setting_window">活跃时段</string>
+    <string name="setting_window_summary">%1$02d:00 - %2$02d:00</string>
+    <string name="setting_window_summary_until_midnight">%1$02d:00 - 24:00</string>
+    <string name="setting_live_on">喝水实时活动</string>
+    <string name="setting_live_summary">常驻通知显示进度与倒计时</string>
+    <string name="setting_sound">提示音</string>
+    <string name="setting_vibrate">震动</string>
+    <string name="setting_theme">外观模式</string>
+    <string name="setting_theme_system">跟随系统</string>
+    <string name="setting_theme_light">浅色</string>
+    <string name="setting_theme_dark">深色</string>
+    <string name="setting_reset">清空全部数据</string>
+    <string name="setting_reset_confirm">将删除全部喝水记录与成就徽章，且无法恢复。</string>
+    <string name="setting_exact_alarm_missing">精确闹钟权限未授予</string>
+    <string name="setting_exact_alarm_missing_summary">授权后提醒时间更准确，当前按窗口触发</string>
+    <string name="setting_notification_missing">通知权限未开启</string>
+    <string name="setting_notification_missing_summary">开启后才能收到喝水提醒与实时活动</string>
+    <string name="setting_notification_granted">通知权限已开启</string>
+    <string name="setting_notification_granted_summary">喝水提醒与实时活动可以正常送达</string>
+    <string name="setting_exact_alarm_granted">精确闹钟权限已开启</string>
+    <string name="setting_exact_alarm_granted_summary">提醒按设定时间准点触发</string>
+    <string name="permission_granted">已开启</string>
+    <string name="setting_about">关于</string>
+    <string name="setting_about_summary">水杯 · 界面组件由 COUI-Kit 提供，还原 ColorOS 17 的悬浮底栏与渐进式模糊</string>
+
+    <string name="renderer_error">浮动材质渲染器不可用：%1$s</string>
+
+    <string name="dialog_add_hint">目标 %1$d ml，按饮品系数折算有效补水</string>
+    <string name="dialog_add_submit">记录 %1$d ml</string>
+    <string name="dialog_effective">本次直接量 %1$d ml · %2$s · 有效补水 %3$d ml</string>
+    <string name="dialog_amount">份量</string>
+    <string name="dialog_factor_hint">%1$s 的补水系数为 %2$d%%，其余水分由身体另行代谢</string>
+    <string name="dialog_custom_type">自定义</string>
+    <string name="dialog_time">记录时间</string>
+    <string name="dialog_time_summary">补记漏记的饮水，只能选今天已过去的时刻</string>
+    <string name="dialog_time_pick">选择记录时间</string>
+    <string name="dialog_clear_input">清除输入</string>
+    <string name="dialog_new_type">新增饮品</string>
+    <string name="dialog_new_type_hint">自定义饮品按 100% 补水计算</string>
+    <string name="dialog_new_type_placeholder">例如：柠檬水</string>
+
+    <string name="home_reached_flag">已达成</string>
+    <string name="home_reminder_status">提醒状态</string>
+    <string name="home_idle_summary">距上次活动 %1$s</string>
+    <string name="home_today_total">%1$d 杯 · 直接量 %2$d ml · 有效补水 %3$d ml</string>
+    <string name="home_delete_entry">删除这条记录</string>
+
+    <string name="calendar_prev_month">上个月</string>
+    <string name="calendar_next_month">下个月</string>
+
+    <string name="medal_filter_all">全部</string>
+    <string name="medal_section_catalog">徽章墙</string>
+    <string name="medal_best_streak">最长连续</string>
+    <string name="medal_total_volume_title">累计补水</string>
+    <string name="medal_cups_title">总杯数</string>
+    <string name="medal_unit_days">天</string>
+    <string name="medal_unit_liters">升</string>
+    <string name="medal_unit_cups">杯</string>
+    <string name="medal_unlocked_now">刚刚点亮</string>
+    <string name="medal_locked">进度 %1$s</string>
+
+    <string name="setting_window_start">提醒开始时间</string>
+    <string name="setting_window_end">提醒结束时间</string>
+    <string name="setting_sound_summary">提醒到达时播放提示音</string>
+    <string name="setting_reset_summary">删除全部记录、成就与设置</string>
+    <string name="mine_section_permission">系统权限</string>
+    <string name="mine_permission_ready">权限已就绪</string>
+    <string name="mine_permission_ready_summary">通知与精确闹钟均已开启，提醒按设定时间送达</string>
+    <string name="mine_appearance_hint">悬浮底栏与渐进式模糊顶栏会跟随外观模式重新着色</string>
+    <string name="mine_footer">水杯 · 目标 %1$d ml · 已记录 %2$d 杯</string>
+
+    <string name="onboarding_skip">跳过</string>
+    <string name="onboarding_continue">继续</string>
+    <string name="onboarding_start">开始使用</string>
+    <string name="onboarding_back">上一步</string>
+    <string name="onboarding_welcome_title">欢迎使用水杯</string>
+    <string name="onboarding_welcome_body">按时补水比一次喝很多更重要。先用一分钟完成基础设置。</string>
+    <string name="onboarding_goal_title">设定每日目标</string>
+    <string name="onboarding_goal_body">目标会显示在首页圆环与实时活动中，之后也能在「我的」里修改。</string>
+    <string name="onboarding_goal_hint">建议成年人每天 1500 - 2500 ml</string>
+    <string name="onboarding_goal_value">%1$d ml</string>
+    <string name="onboarding_reminder_title">安排喝水提醒</string>
+    <string name="onboarding_reminder_body">在活跃时段内按间隔提醒补水，今日达标后自动安静下来。</string>
+    <string name="onboarding_permission_title">开启必要权限</string>
+    <string name="onboarding_permission_body">通知用于喝水提醒与实时活动，精确闹钟保证提醒准时送达。</string>
+    <string name="onboarding_permissions_ready">权限已就绪</string>
+    <string name="onboarding_page_indicator">第 %1$d 步，共 %2$d 步</string>
+    <string name="onboarding_summary_goal">每日目标 %1$d ml</string>
+    <string name="onboarding_summary_reminder">每 %1$d 分钟 · %2$s - %3$s</string>
+    <string name="onboarding_summary_permission">随时可以在「我的 → 系统权限」里调整</string>
+    <string name="onboarding_preset">%1$d ml</string>
+
+    <string-array name="aqua_week_days">
+        <item>一</item>
+        <item>二</item>
+        <item>三</item>
+        <item>四</item>
+        <item>五</item>
+        <item>六</item>
+        <item>日</item>
+    </string-array>
+</resources>

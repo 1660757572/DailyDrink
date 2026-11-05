@@ -40,6 +40,7 @@ enum class ThemeMode { System, Light, Dark }
 
 const val DEFAULT_SCRIM = 0.55f
 const val MAX_BLUR_DP = 30f
+const val MIN_CONTAINER_OPACITY = 0.4f
 
 /** 强调色方案：固定模板之外还有跟随壁纸与用户自选。 */
 enum class ColorStyle { Default, Dynamic, Grass, Lemon, Mono, Custom }
@@ -104,6 +105,8 @@ data class AquaSnapshot(
     /** 背景图上方遮罩的不透明度（0..1）与高斯模糊半径（dp）。 */
     val backgroundScrim: Float = DEFAULT_SCRIM,
     val backgroundBlur: Float = 0f,
+    /** 卡片等容器背景的不透明度（0..1），低于 1 时透出页面背景。 */
+    val containerOpacity: Float = 1f,
     val onboarded: Boolean = false,
     val nickname: String = "",
     val avatarImage: String? = null,

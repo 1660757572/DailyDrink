@@ -14,8 +14,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
@@ -132,6 +134,9 @@ private fun readableAccent(color: Color, dark: Boolean): Color {
     }
 }
 
+/** 卡片等容器背景的不透明度；由外观设置统一驱动，避免每处容器单独传参。 */
+val LocalAquaContainerAlpha = staticCompositionLocalOf { 1f }
+
 /** COUI 组件在消费处读取 CouiColorScheme，accent 必须与 M3 primary 保持一致。 */
 private fun couiScheme(dark: Boolean, colors: ColorScheme): CouiColorScheme = CouiColorScheme(
     accent = colors.primary,
@@ -152,6 +157,7 @@ fun AquaTheme(
     dark: Boolean,
     colorStyle: ColorStyle = ColorStyle.Default,
     customAccent: Int? = null,
+    containerOpacity: Float = 1f,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -167,9 +173,11 @@ fun AquaTheme(
             ?.let { base.withAccent(if (dark) it.dark else it.light) }
             ?: base
     }
-    MaterialTheme(colorScheme = colors) {
-        CouiTheme(darkTheme = dark, colorScheme = couiScheme(dark, colors), materialTint = colors.surface) {
-            content()
+    CompositionLocalProvider(LocalAquaContainerAlpha provides containerOpacity.coerceIn(0f, 1f)) {
+        MaterialTheme(colorScheme = colors) {
+            CouiTheme(darkTheme = dark, colorScheme = couiScheme(dark, colors), materialTint = colors.surface) {
+                content()
+            }
         }
     }
 }

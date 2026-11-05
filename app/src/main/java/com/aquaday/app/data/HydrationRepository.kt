@@ -89,6 +89,8 @@ class HydrationRepository(private val context: Context) {
 
     suspend fun setBackgroundBlur(dp: Int) = store.setBackgroundBlur(dp)
 
+    suspend fun setContainerOpacity(percent: Int) = store.setContainerOpacity(percent)
+
     suspend fun setNickname(nickname: String) = store.setNickname(nickname)
 
     /** 头像与背景同一套落盘逻辑，只是前缀不同。 */

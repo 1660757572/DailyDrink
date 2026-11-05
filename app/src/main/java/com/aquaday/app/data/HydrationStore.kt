@@ -40,6 +40,7 @@ private object AquaKeys {
     val BACKGROUND_IMAGE = stringPreferencesKey("background_image")
     val BACKGROUND_SCRIM = intPreferencesKey("background_scrim")
     val BACKGROUND_BLUR = intPreferencesKey("background_blur")
+    val CONTAINER_OPACITY = intPreferencesKey("container_opacity")
     val ONBOARDED = intPreferencesKey("onboarded")
     val NICKNAME = stringPreferencesKey("nickname")
     val AVATAR_IMAGE = stringPreferencesKey("avatar_image")
@@ -88,6 +89,7 @@ class HydrationStore(context: Context) {
                 backgroundImage = prefs[AquaKeys.BACKGROUND_IMAGE]?.takeIf { it.isNotBlank() },
                 backgroundScrim = (prefs[AquaKeys.BACKGROUND_SCRIM] ?: (DEFAULT_SCRIM * 100).toInt()) / 100f,
                 backgroundBlur = (prefs[AquaKeys.BACKGROUND_BLUR] ?: 0).toFloat(),
+                containerOpacity = (prefs[AquaKeys.CONTAINER_OPACITY] ?: 100) / 100f,
                 onboarded = (prefs[AquaKeys.ONBOARDED] ?: 0) == 1,
                 nickname = prefs[AquaKeys.NICKNAME].orEmpty(),
                 avatarImage = prefs[AquaKeys.AVATAR_IMAGE]?.takeIf { it.isNotBlank() },
@@ -161,6 +163,10 @@ class HydrationStore(context: Context) {
 
     suspend fun setBackgroundBlur(dp: Int) {
         store.edit { it[AquaKeys.BACKGROUND_BLUR] = dp.coerceIn(0, MAX_BLUR_DP.toInt()) }
+    }
+
+    suspend fun setContainerOpacity(percent: Int) {
+        store.edit { it[AquaKeys.CONTAINER_OPACITY] = percent.coerceIn((MIN_CONTAINER_OPACITY * 100).toInt(), 100) }
     }
 
     suspend fun setOnboarded(completed: Boolean) {

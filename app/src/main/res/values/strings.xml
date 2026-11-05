@@ -97,6 +97,9 @@
     <string name="appearance_section_mode">外观模式</string>
     <string name="appearance_section_color">颜色</string>
     <string name="appearance_section_background">背景</string>
+    <string name="appearance_section_container">容器</string>
+    <string name="setting_container_opacity">容器不透明度</string>
+    <string name="setting_container_opacity_summary">调低后卡片会透出背景，画面更轻盈</string>
     <string name="setting_dynamic_color">动态取色</string>
     <string name="setting_dynamic_color_summary">从系统壁纸提取主色调（Material You）</string>
     <string name="color_style_default">水蓝</string>

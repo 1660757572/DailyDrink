@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -109,6 +110,18 @@ private class ShellRenderers {
     val bottom = CouiFloatingRenderer()
 }
 
+/**
+ * CouiBottomBar 内置的加号在深色下固定为白色、浅色下固定为黑色，
+ * 遇到黑白这类浅强调色时会和按钮底色糊在一起；图标置空后由壳层按 onPrimary 自绘。
+ */
+private val EmptyIcon: ImageVector = ImageVector.Builder(
+    name = "aqua-empty",
+    defaultWidth = 24.dp,
+    defaultHeight = 24.dp,
+    viewportWidth = 24f,
+    viewportHeight = 24f,
+).build()
+
 private enum class AquaPage(val titleRes: Int) {
     Home(R.string.tab_home),
     Calendar(R.string.tab_calendar),
@@ -147,6 +160,7 @@ fun AquaApp(viewModel: AquaViewModel = viewModel()) {
         dark = dark,
         colorStyle = snapshot?.colorStyle ?: ColorStyle.Default,
         customAccent = snapshot?.customAccent,
+        containerOpacity = snapshot?.containerOpacity ?: 1f,
     ) {
         when {
             snapshot == null -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
@@ -363,7 +377,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                             renderer = floatingBar.bottom,
                             items = items,
                             selectedIndex = AquaPage.entries.indexOf(page),
-                            rightIcon = Icons.Filled.Add,
+                            rightIcon = EmptyIcon,
                             rightDescription = stringResource(R.string.action_add),
                             rightVisible = true,
                             onRightClick = { addOpen = true },
@@ -374,6 +388,22 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                             dark = dark,
                             onSelection = { pageIndex = it.coerceIn(0, AquaPage.entries.lastIndex) },
                         )
+                        // FAB 与底栏同尺寸同位：16dp 右边距，下沿正好压在导航栏上沿。
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                .padding(end = 16.dp)
+                                .size(56.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
                     } else {
                         PlainTabBar(items, AquaPage.entries.indexOf(page)) { pageIndex = it }
                     }

@@ -54,6 +54,7 @@ import androidx.compose.ui.window.Dialog
 import com.aquaday.app.R
 import com.aquaday.app.data.ColorStyle
 import com.aquaday.app.data.MAX_BLUR_DP
+import com.aquaday.app.data.MIN_CONTAINER_OPACITY
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaChip
@@ -83,6 +84,7 @@ fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
     var showColorPicker by remember { mutableStateOf(false) }
     var scrimDraft by remember(snapshot.backgroundScrim) { mutableFloatStateOf(snapshot.backgroundScrim * 100f) }
     var blurDraft by remember(snapshot.backgroundBlur) { mutableFloatStateOf(snapshot.backgroundBlur) }
+    var opacityDraft by remember(snapshot.containerOpacity) { mutableFloatStateOf(snapshot.containerOpacity * 100f) }
 
     AquaSectionTitle(stringResource(R.string.appearance_section_mode))
     AquaCard {
@@ -231,6 +233,21 @@ fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
                 )
             }
         }
+    }
+
+    Spacer(Modifier.height(16.dp))
+    AquaSectionTitle(stringResource(R.string.appearance_section_container))
+    AquaCard {
+        AquaSliderRow(
+            title = stringResource(R.string.setting_container_opacity),
+            value = opacityDraft,
+            onValueChange = { opacityDraft = it },
+            onValueChangeFinished = { viewModel.setContainerOpacity(opacityDraft.roundToInt()) },
+            valueRange = (MIN_CONTAINER_OPACITY * 100f)..100f,
+            steps = 11,
+            valueText = "${opacityDraft.roundToInt()}%",
+            summary = stringResource(R.string.setting_container_opacity_summary),
+        )
     }
 
     if (showColorWarning) {

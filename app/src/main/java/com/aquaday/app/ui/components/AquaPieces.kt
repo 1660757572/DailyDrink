@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.aquaday.app.ui.LocalAquaContainerAlpha
 import com.itos.coui.slider.CouiSlider
 import com.itos.coui.switch.CouiSwitch
 import com.itos.coui.theme.CouiTheme
@@ -55,11 +56,12 @@ fun AquaCard(
     contentPadding: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val alpha = LocalAquaContainerAlpha.current
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(AquaCardShape)
-            .background(containerColor)
+            .background(if (alpha >= 1f) containerColor else containerColor.copy(alpha = alpha))
             .then(
                 if (contentPadding) {
                     Modifier.padding(horizontal = AquaCardHorizontalPadding, vertical = AquaCardVerticalPadding)

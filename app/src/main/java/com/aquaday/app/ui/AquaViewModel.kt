@@ -104,6 +104,8 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setBackgroundBlur(dp: Int) = viewModelScope.launch { repository.setBackgroundBlur(dp) }
 
+    fun setContainerOpacity(percent: Int) = viewModelScope.launch { repository.setContainerOpacity(percent) }
+
     fun setAvatarImage(uri: android.net.Uri?) = viewModelScope.launch { repository.setAvatarImage(uri) }
 
     fun setNickname(nickname: String) = viewModelScope.launch { repository.setNickname(nickname) }

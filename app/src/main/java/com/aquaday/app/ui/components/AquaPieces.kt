@@ -30,8 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.itos.coui.slider.CouiSlider
@@ -101,6 +103,7 @@ fun AquaRow(
     summary: String? = null,
     icon: ImageVector? = null,
     iconTint: Color? = null,
+    iconModifier: Modifier = Modifier,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     trailing: @Composable (() -> Unit)? = null,
@@ -118,7 +121,7 @@ fun AquaRow(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(22.dp).then(iconModifier),
                 tint = if (enabled) tint else tint.copy(alpha = 0.4f),
             )
             Spacer(Modifier.width(14.dp))
@@ -151,9 +154,17 @@ fun AquaSwitchRow(
     iconTint: Color? = null,
     enabled: Boolean = true,
 ) {
-    AquaRow(title, modifier, summary, icon, iconTint, enabled, trailing = {
-        CouiSwitch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
-    })
+    AquaRow(
+        title = title,
+        modifier = modifier,
+        summary = summary,
+        icon = icon,
+        iconTint = iconTint,
+        enabled = enabled,
+        trailing = {
+            CouiSwitch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
+        },
+    )
 }
 
 @Composable
@@ -336,6 +347,26 @@ fun AquaSegmented(
                 )
             }
         }
+    }
+}
+
+/**
+ * 分类栏与详情面板自带内容边距；向外多量 inset 再左移，
+ * 让整块背景铺到屏幕边缘，同时首项仍与页面内容左缘对齐。
+ */
+fun Modifier.bleedHorizontal(inset: Dp = 16.dp): Modifier = layout { measurable, constraints ->
+    val insetPx = inset.roundToPx()
+    val width = constraints.maxWidth + insetPx * 2
+    val placeable = measurable.measure(
+        Constraints(
+            minWidth = width,
+            maxWidth = width,
+            minHeight = constraints.minHeight,
+            maxHeight = constraints.maxHeight,
+        ),
+    )
+    layout(constraints.maxWidth, placeable.height) {
+        placeable.place(-insetPx, 0)
     }
 }
 

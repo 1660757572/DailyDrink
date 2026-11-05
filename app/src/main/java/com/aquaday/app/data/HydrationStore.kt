@@ -35,8 +35,12 @@ private object AquaKeys {
     val CUSTOM_TYPES = stringPreferencesKey("custom_types")
     val DEFAULT_CUP = intPreferencesKey("default_cup_ml")
     val DYNAMIC_COLOR = intPreferencesKey("dynamic_color")
+    val COLOR_STYLE = intPreferencesKey("color_style")
+    val CUSTOM_ACCENT = intPreferencesKey("custom_accent")
     val BACKGROUND_IMAGE = stringPreferencesKey("background_image")
     val ONBOARDED = intPreferencesKey("onboarded")
+    val NICKNAME = stringPreferencesKey("nickname")
+    val AVATAR_IMAGE = stringPreferencesKey("avatar_image")
 }
 
 /** DataStore 持久层；只负责编解码与读写，业务规则留在仓储层。 */
@@ -76,9 +80,13 @@ class HydrationStore(context: Context) {
                     Instant.ofEpochMilli(millis).atZone(zone).toLocalDateTime()
                 },
                 drinkTypes = types,
-                dynamicColor = (prefs[AquaKeys.DYNAMIC_COLOR] ?: 0) == 1,
+                colorStyle = prefs[AquaKeys.COLOR_STYLE]?.let { ColorStyle.entries.getOrNull(it) }
+                    ?: if ((prefs[AquaKeys.DYNAMIC_COLOR] ?: 0) == 1) ColorStyle.Dynamic else ColorStyle.Default,
+                customAccent = prefs[AquaKeys.CUSTOM_ACCENT],
                 backgroundImage = prefs[AquaKeys.BACKGROUND_IMAGE]?.takeIf { it.isNotBlank() },
                 onboarded = (prefs[AquaKeys.ONBOARDED] ?: 0) == 1,
+                nickname = prefs[AquaKeys.NICKNAME].orEmpty(),
+                avatarImage = prefs[AquaKeys.AVATAR_IMAGE]?.takeIf { it.isNotBlank() },
             )
         }
 
@@ -123,8 +131,18 @@ class HydrationStore(context: Context) {
         store.edit { it[AquaKeys.THEME] = mode.ordinal }
     }
 
-    suspend fun setDynamicColor(enabled: Boolean) {
-        store.edit { it[AquaKeys.DYNAMIC_COLOR] = if (enabled) 1 else 0 }
+    suspend fun setColorStyle(style: ColorStyle) {
+        store.edit {
+            it[AquaKeys.COLOR_STYLE] = style.ordinal
+            // 旧版本只认识动态取色开关，保留同步以便降级时不丢设置。
+            it[AquaKeys.DYNAMIC_COLOR] = if (style == ColorStyle.Dynamic) 1 else 0
+        }
+    }
+
+    suspend fun setCustomAccent(argb: Int?) {
+        store.edit { prefs ->
+            if (argb == null) prefs.remove(AquaKeys.CUSTOM_ACCENT) else prefs[AquaKeys.CUSTOM_ACCENT] = argb
+        }
     }
 
     suspend fun setBackgroundImage(path: String?) {
@@ -135,6 +153,19 @@ class HydrationStore(context: Context) {
 
     suspend fun setOnboarded(completed: Boolean) {
         store.edit { it[AquaKeys.ONBOARDED] = if (completed) 1 else 0 }
+    }
+
+    suspend fun setNickname(raw: String) {
+        val value = raw.trim().replace("\n", " ").take(24)
+        store.edit { prefs ->
+            if (value.isEmpty()) prefs.remove(AquaKeys.NICKNAME) else prefs[AquaKeys.NICKNAME] = value
+        }
+    }
+
+    suspend fun setAvatarImage(path: String?) {
+        store.edit { prefs ->
+            if (path == null) prefs.remove(AquaKeys.AVATAR_IMAGE) else prefs[AquaKeys.AVATAR_IMAGE] = path
+        }
     }
 
     suspend fun updateSettings(transform: (ReminderSettings) -> ReminderSettings) {
@@ -167,12 +198,16 @@ class HydrationStore(context: Context) {
         }
     }
 
-    /** 清空记录与设置，但保留引导完成标记，避免重置数据后再次播放引导。 */
+    /** 清空记录与设置，但保留引导标记与个人信息（昵称、头像不属于喝水数据）。 */
     suspend fun resetAll() {
         store.edit { prefs ->
             val onboarded = prefs[AquaKeys.ONBOARDED]
+            val nickname = prefs[AquaKeys.NICKNAME]
+            val avatar = prefs[AquaKeys.AVATAR_IMAGE]
             prefs.clear()
             if (onboarded != null) prefs[AquaKeys.ONBOARDED] = onboarded
+            if (nickname != null) prefs[AquaKeys.NICKNAME] = nickname
+            if (avatar != null) prefs[AquaKeys.AVATAR_IMAGE] = avatar
         }
     }
 

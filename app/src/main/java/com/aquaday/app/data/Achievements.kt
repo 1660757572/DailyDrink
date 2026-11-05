@@ -1,21 +1,36 @@
 package com.aquaday.app.data
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BakeryDining
 import androidx.compose.material.icons.filled.BeachAccess
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.BreakfastDining
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Coffee
+import androidx.compose.material.icons.filled.Diamond
+import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.EmojiFoodBeverage
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Liquor
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.MilitaryTech
+import androidx.compose.material.icons.filled.NightShelter
 import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.Pool
+import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.Stars
+import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Water
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.ui.graphics.vector.ImageVector
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -87,9 +102,29 @@ object Achievements {
             target = { 10 }, progress = { it.maxDailyEventCount },
         ),
         Achievement(
+            id = "half_goal", title = "半程达标", summary = "当天补水达到目标的一半",
+            category = CATEGORY_DAILY, icon = Icons.Filled.Percent, tier = AchievementTier.Bronze, unit = " ml",
+            target = { it.snapshot.goalMl / 2 }, progress = { it.today.totalMl },
+        ),
+        Achievement(
+            id = "five_cups", title = "五杯小满", summary = "单日记录 5 次喝水",
+            category = CATEGORY_DAILY, icon = Icons.Filled.BreakfastDining, tier = AchievementTier.Bronze, unit = " 次",
+            target = { 5 }, progress = { it.maxDailyEventCount },
+        ),
+        Achievement(
+            id = "chug_1l", title = "一瓶下肚", summary = "单次喝下 1000 毫升",
+            category = CATEGORY_DAILY, icon = Icons.Filled.Bolt, tier = AchievementTier.Gold, unit = " ml",
+            target = { 1_000 }, progress = { it.singleMaxMl },
+        ),
+        Achievement(
             id = "streak_3", title = "三日水润", summary = "连续 3 天达标",
             category = CATEGORY_STREAK, icon = Icons.Filled.Repeat, tier = AchievementTier.Bronze, unit = " 天",
             target = { 3 }, progress = { it.bestStreakDays },
+        ),
+        Achievement(
+            id = "streak_5", title = "五日连饮", summary = "连续 5 天达标",
+            category = CATEGORY_STREAK, icon = Icons.Filled.Repeat, tier = AchievementTier.Bronze, unit = " 天",
+            target = { 5 }, progress = { it.bestStreakDays },
         ),
         Achievement(
             id = "streak_7", title = "七日不辍", summary = "连续 7 天达标",
@@ -102,6 +137,11 @@ object Achievements {
             target = { 21 }, progress = { it.bestStreakDays },
         ),
         Achievement(
+            id = "streak_30", title = "满月不辍", summary = "连续 30 天达标",
+            category = CATEGORY_STREAK, icon = Icons.Filled.Stars, tier = AchievementTier.Gold, unit = " 天",
+            target = { 30 }, progress = { it.bestStreakDays },
+        ),
+        Achievement(
             id = "streak_100", title = "百日长流", summary = "连续 100 天达标",
             category = CATEGORY_STREAK, icon = Icons.Filled.MilitaryTech, tier = AchievementTier.Legend, unit = " 天",
             target = { 100 }, progress = { it.bestStreakDays },
@@ -110,6 +150,21 @@ object Achievements {
             id = "current_7", title = "此刻正在坚持", summary = "当前连续达标天数达到 7 天",
             category = CATEGORY_STREAK, icon = Icons.Filled.RocketLaunch, tier = AchievementTier.Silver, unit = " 天",
             target = { 7 }, progress = { it.streakDays },
+        ),
+        Achievement(
+            id = "record_30", title = "三十天打卡", summary = "累计记录满 30 天",
+            category = CATEGORY_STREAK, icon = Icons.Filled.Flag, tier = AchievementTier.Silver, unit = " 天",
+            target = { 30 }, progress = { it.recordedDays },
+        ),
+        Achievement(
+            id = "record_100", title = "百日打卡", summary = "累计记录满 100 天",
+            category = CATEGORY_STREAK, icon = Icons.Filled.Terrain, tier = AchievementTier.Legend, unit = " 天",
+            target = { 100 }, progress = { it.recordedDays },
+        ),
+        Achievement(
+            id = "volume_1l", title = "初泉一勺", summary = "累计有效补水 1 升",
+            category = CATEGORY_VOLUME, icon = Icons.Filled.Pool, tier = AchievementTier.Bronze, unit = " ml",
+            target = { 1_000 }, progress = { it.cumulativeEffectiveMl },
         ),
         Achievement(
             id = "volume_10l", title = "一壶之水", summary = "累计有效补水 10 升",
@@ -127,6 +182,21 @@ object Achievements {
             target = { 200_000 }, progress = { it.cumulativeEffectiveMl },
         ),
         Achievement(
+            id = "month_30l", title = "单月三十升", summary = "单月有效补水达到 30 升",
+            category = CATEGORY_VOLUME, icon = Icons.Filled.Diamond, tier = AchievementTier.Gold, unit = " ml",
+            target = { 30_000 }, progress = { it.bestMonthMl },
+        ),
+        Achievement(
+            id = "cups_100", title = "百杯不歇", summary = "累计记录 100 次喝水",
+            category = CATEGORY_VOLUME, icon = Icons.Filled.QueryStats, tier = AchievementTier.Silver, unit = " 次",
+            target = { 100 }, progress = { it.eventCount },
+        ),
+        Achievement(
+            id = "cups_365", title = "三百六十五杯", summary = "累计记录 365 次喝水",
+            category = CATEGORY_VOLUME, icon = Icons.Filled.WorkspacePremium, tier = AchievementTier.Legend, unit = " 次",
+            target = { 365 }, progress = { it.eventCount },
+        ),
+        Achievement(
             id = "perfect_month_1", title = "完美一月", summary = "某个月份每一天都达标",
             category = CATEGORY_VOLUME, icon = Icons.Filled.EmojiEvents, tier = AchievementTier.Legend, unit = " 次",
             target = { 1 }, progress = { it.perfectMonths.size },
@@ -142,6 +212,21 @@ object Achievements {
             target = { 4 }, progress = { it.distinctTypes },
         ),
         Achievement(
+            id = "variety_6", title = "六味皆尝", summary = "记录过 6 种不同饮品",
+            category = CATEGORY_TASTE, icon = Icons.Filled.EmojiFoodBeverage, tier = AchievementTier.Gold, unit = " 种",
+            target = { 6 }, progress = { it.distinctTypes },
+        ),
+        Achievement(
+            id = "custom_type", title = "自创饮品", summary = "创建过一种自定义饮品",
+            category = CATEGORY_TASTE, icon = Icons.Filled.Liquor, tier = AchievementTier.Bronze, unit = " 种",
+            target = { 1 }, progress = { it.customTypeCount },
+        ),
+        Achievement(
+            id = "loyal_cup", title = "专一口味", summary = "同一种饮品记录 30 次",
+            category = CATEGORY_TASTE, icon = Icons.Filled.BakeryDining, tier = AchievementTier.Silver, unit = " 次",
+            target = { 30 }, progress = { it.topTypeCount },
+        ),
+        Achievement(
             id = "early_bird", title = "晨起第一杯", summary = "在早晨 5-7 点记录过喝水",
             category = CATEGORY_SPECIAL, icon = Icons.Filled.WbSunny, tier = AchievementTier.Bronze, unit = " 小时",
             target = { 1 }, progress = { if (it.earliestHour != null && it.earliestHour in 5..7) 1 else 0 },
@@ -155,6 +240,20 @@ object Achievements {
             id = "bedtime_ritual", title = "睡前一杯", summary = "在 21-23 点记录过喝水",
             category = CATEGORY_SPECIAL, icon = Icons.Filled.Bedtime, tier = AchievementTier.Silver, unit = " 小时",
             target = { 1 }, progress = { if (it.latestHour != null && it.latestHour in 21..23) 1 else 0 },
+        ),
+        Achievement(
+            id = "all_day", title = "全天候补水", summary = "单日内覆盖 4 个六小时时段",
+            category = CATEGORY_SPECIAL, icon = Icons.Filled.DirectionsRun, tier = AchievementTier.Silver, unit = " 段",
+            target = { 4 }, progress = { it.maxDailyBands },
+        ),
+        Achievement(
+            id = "dawn_and_dusk", title = "晨昏不辍", summary = "清晨与深夜都留下过记录",
+            category = CATEGORY_SPECIAL, icon = Icons.Filled.NightShelter, tier = AchievementTier.Silver, unit = " 项",
+            target = { 2 },
+            progress = {
+                (if (it.earliestHour != null && it.earliestHour in 5..7) 1 else 0) +
+                    (if (it.latestHour != null && it.latestHour >= 22) 1 else 0)
+            },
         ),
         Achievement(
             id = "half_year", title = "半年之约", summary = "记录跨越 180 天",

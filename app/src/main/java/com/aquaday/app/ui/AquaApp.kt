@@ -2,9 +2,13 @@ package com.aquaday.app.ui
 
 import android.app.Activity
 import android.os.Build
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,15 +35,19 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.EmojiEvents
@@ -54,13 +62,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
@@ -77,6 +87,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aquaday.app.R
+import com.aquaday.app.data.Achievements
+import com.aquaday.app.data.ColorStyle
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaAddSheet
@@ -107,7 +119,11 @@ private enum class AquaSubpage(val titleRes: Int) {
     Reminder(R.string.mine_subpage_reminder),
     Permission(R.string.mine_subpage_permission),
     Appearance(R.string.mine_subpage_appearance),
+    Profile(R.string.mine_subpage_profile),
 }
+
+/** 徽章详情路由：单例对象，滑动切换徽章时不改变路由，避免重复过场动画。 */
+private object MedalRoute
 
 @Composable
 fun AquaApp(viewModel: AquaViewModel = viewModel()) {
@@ -124,7 +140,11 @@ fun AquaApp(viewModel: AquaViewModel = viewModel()) {
             isAppearanceLightNavigationBars = !dark
         }
     }
-    AquaTheme(dark = dark, dynamicColor = snapshot?.dynamicColor == true) {
+    AquaTheme(
+        dark = dark,
+        colorStyle = snapshot?.colorStyle ?: ColorStyle.Default,
+        customAccent = snapshot?.customAccent,
+    ) {
         when {
             snapshot == null -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
             !snapshot.onboarded -> OnboardingScreen(state, viewModel)
@@ -133,25 +153,43 @@ fun AquaApp(viewModel: AquaViewModel = viewModel()) {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolean) {
     val context = LocalContext.current
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshPermissions() }
     var pageIndex by rememberSaveable { mutableIntStateOf(0) }
     var subpageIndex by rememberSaveable { mutableIntStateOf(-1) }
+    var medalFilter by rememberSaveable { mutableIntStateOf(0) }
+    var medalDetail by rememberSaveable { mutableStateOf(false) }
+    var medalStart by rememberSaveable { mutableIntStateOf(0) }
     var addOpen by rememberSaveable { mutableStateOf(false) }
     val page = AquaPage.entries.getOrElse(pageIndex) { AquaPage.Home }
     val subpage = AquaSubpage.entries.getOrNull(subpageIndex)
-    val route: Any = subpage ?: page
+    // 徽章详情与设置二级页共用「离开顶层」这套返回与隐藏底栏的逻辑。
+    val inSubpage = subpage != null || medalDetail
+    val route: Any = if (medalDetail) MedalRoute else (subpage ?: page)
     val routeTitle = stringResource(
         when (route) {
             is AquaSubpage -> route.titleRes
             is AquaPage -> route.titleRes
-            else -> page.titleRes
+            else -> R.string.medal_detail_title
         },
     )
+    val medalItems = remember(state.achievements, medalFilter) {
+        if (medalFilter <= 0) state.achievements
+        else state.achievements.filter { it.achievement.category == Achievements.categories[medalFilter - 1] }
+    }
     val backgroundImage = state.metrics?.snapshot?.backgroundImage
-    BackHandler(enabled = subpage != null) { subpageIndex = -1 }
+    var backProgress by remember { mutableFloatStateOf(0f) }
+    PredictiveBackHandler(enabled = inSubpage) { progress ->
+        try {
+            progress.collect { backProgress = it.progress }
+            if (medalDetail) medalDetail = false else subpageIndex = -1
+        } finally {
+            backProgress = 0f
+        }
+    }
     val snackbar = remember { SnackbarHostState() }
     val backdrop = rememberCouiBackdrop()
     // 页面内的悬浮件（长按钮、分类胶囊）不能采样自己所在的源，需要额外的兄弟源。
@@ -173,17 +211,15 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
         )
     }
     val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 56.dp
-    val bottomPadding = if (subpage == null) {
-        112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    } else {
+    val bottomPadding = if (inSubpage) {
         32.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    } else {
+        112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     }
-    val scroll = rememberScrollState()
+    // 每个路由保存各自的滚动位置：切换标签再回来仍停在原处，二级页退出也不会把「我的」顶回顶部。
+    val routeStates = rememberSaveableStateHolder()
+    var collapse by remember { mutableFloatStateOf(0f) }
     val collapseDistance = with(LocalDensity.current) { 40.dp.toPx() }
-    val collapse by remember(collapseDistance) {
-        derivedStateOf { (scroll.value / collapseDistance).coerceIn(0f, 1f) }
-    }
-    LaunchedEffect(route) { scroll.scrollTo(0) }
 
     LaunchedEffect(state.message) {
         val message = state.message ?: return@LaunchedEffect
@@ -196,112 +232,245 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
         }
     }
 
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // 模糊源：页面内容铺满整屏，顶栏与底栏作为兄弟节点采样它。
-        Box(Modifier.fillMaxSize().couiBackdrop(backdrop)) {
-            // 只录制背景：页面里的按钮与胶囊采样这一层，采样方与被采样方互为兄弟。
-            Box(Modifier.fillMaxSize().couiBackdrop(pageBackdrop)) {
-                AquaPageBackground(dark = dark, backgroundImage = backgroundImage, modifier = Modifier.fillMaxSize())
-            }
-            AnimatedContent(
-                targetState = route,
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter,
-                transitionSpec = {
-                    (fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.985f))
-                        .togetherWith(fadeOut(tween(140)))
-                },
-                label = "aqua-page",
-            ) { target ->
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scroll)
-                        .padding(top = topPadding, bottom = bottomPadding)
-                        .padding(horizontal = 16.dp),
-                ) {
-                    AquaLargeTitle(title = routeTitle, collapse = collapse)
-                    when (target) {
-                        AquaPage.Home -> HomeScreen(
-                            state,
-                            viewModel,
-                            onAdd = { addOpen = true },
-                            backdrop = pageBackdrop,
-                            dark = dark,
-                        )
-                        AquaPage.Calendar -> CalendarScreen(state, viewModel)
-                        AquaPage.Medals -> MedalsScreen(state, backdrop = pageBackdrop, dark = dark)
-                        AquaPage.Mine -> MineScreen(
-                            state,
-                            viewModel,
-                            onOpenReminder = { subpageIndex = AquaSubpage.Reminder.ordinal },
-                            onOpenPermission = { subpageIndex = AquaSubpage.Permission.ordinal },
-                            onOpenAppearance = { subpageIndex = AquaSubpage.Appearance.ordinal },
-                        )
-                        AquaSubpage.Reminder -> ReminderSettingsScreen(state, viewModel)
-                        AquaSubpage.Permission -> PermissionSettingsScreen(state, viewModel)
-                        AquaSubpage.Appearance -> AppearanceScreen(state, viewModel)
-                        else -> Unit
+    SharedTransitionLayout {
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            // 模糊源：页面内容铺满整屏，顶栏与底栏作为兄弟节点采样它。
+            Box(Modifier.fillMaxSize().couiBackdrop(backdrop)) {
+                // 只录制背景：页面里的按钮与胶囊采样这一层，采样方与被采样方互为兄弟。
+                Box(Modifier.fillMaxSize().couiBackdrop(pageBackdrop)) {
+                    AquaPageBackground(dark = dark, backgroundImage = backgroundImage, modifier = Modifier.fillMaxSize())
+                }
+                AnimatedContent(
+                    targetState = route,
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter,
+                    transitionSpec = {
+                        (fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.985f))
+                            .togetherWith(fadeOut(tween(140)))
+                    },
+                    label = "aqua-page",
+                ) { target ->
+                    val animatedVisibilityScope = this
+                    routeStates.SaveableStateProvider(routeKey(target)) {
+                        val scroll = rememberScrollState()
+                        LaunchedEffect(scroll, target, route) {
+                            snapshotFlow { (scroll.value / collapseDistance).coerceIn(0f, 1f) }
+                                .collect { value -> if (target == route) collapse = value }
+                        }
+                        Column(
+                            Modifier
+                                .fillMaxSize()
+                                .verticalScroll(scroll)
+                                .graphicsLayer {
+                                    val gesture = if (inSubpage) backProgress else 0f
+                                    val scale = 1f - 0.03f * gesture
+                                    scaleX = scale
+                                    scaleY = scale
+                                    translationX = gesture * 20.dp.toPx()
+                                }
+                                .padding(top = topPadding, bottom = bottomPadding)
+                                .padding(horizontal = 16.dp),
+                        ) {
+                            when (target) {
+                                is AquaSubpage -> SharedSubpageHeader(
+                                    page = target,
+                                    state = state,
+                                    collapse = collapse,
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                )
+                                is AquaPage -> AquaLargeTitle(title = stringResource(target.titleRes), collapse = collapse)
+                                else -> AquaLargeTitle(title = routeTitle, collapse = collapse)
+                            }
+                            when (target) {
+                                AquaPage.Home -> HomeScreen(
+                                    state,
+                                    viewModel,
+                                    onAdd = { addOpen = true },
+                                    backdrop = pageBackdrop,
+                                    dark = dark,
+                                )
+                                AquaPage.Calendar -> CalendarScreen(state, viewModel)
+                                AquaPage.Medals -> MedalsScreen(
+                                    state,
+                                    backdrop = pageBackdrop,
+                                    dark = dark,
+                                    filter = medalFilter,
+                                    onFilterChange = { medalFilter = it },
+                                    onOpenDetail = { index ->
+                                        medalStart = index
+                                        medalDetail = true
+                                    },
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                )
+                                AquaPage.Mine -> MineScreen(
+                                    state,
+                                    viewModel,
+                                    onOpenProfile = { subpageIndex = AquaSubpage.Profile.ordinal },
+                                    onOpenReminder = { subpageIndex = AquaSubpage.Reminder.ordinal },
+                                    onOpenPermission = { subpageIndex = AquaSubpage.Permission.ordinal },
+                                    onOpenAppearance = { subpageIndex = AquaSubpage.Appearance.ordinal },
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                )
+                                AquaSubpage.Reminder -> ReminderSettingsScreen(state, viewModel)
+                                AquaSubpage.Permission -> PermissionSettingsScreen(state, viewModel)
+                                AquaSubpage.Appearance -> AppearanceScreen(state, viewModel)
+                                AquaSubpage.Profile -> ProfileScreen(state, viewModel)
+                                else -> MedalDetailScreen(
+                                    medalItems,
+                                    medalStart,
+                                    this@SharedTransitionLayout,
+                                    animatedVisibilityScope,
+                                )
+                            }
+                            Spacer(Modifier.height(24.dp))
+                        }
                     }
-                    Spacer(Modifier.height(24.dp))
                 }
             }
-        }
 
-        CouiTopAppBar(modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(), backdrop = backdrop) {
-            AquaTopBarContent(
-                title = routeTitle,
-                compactAlpha = collapse,
-                showBack = subpage != null,
-                onBack = { subpageIndex = -1 },
-            )
-        }
+            CouiTopAppBar(modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(), backdrop = backdrop) {
+                AquaTopBarContent(
+                    title = routeTitle,
+                    compactAlpha = collapse,
+                    showBack = inSubpage,
+                    onBack = { if (medalDetail) medalDetail = false else subpageIndex = -1 },
+                )
+            }
 
-        if (subpage == null) {
-            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && floatingBar != null) {
-                    CouiBottomBar(
-                        modifier = Modifier.fillMaxWidth().widenFloatBar(),
-                        backdrop = backdrop,
-                        renderer = floatingBar.bottom,
-                        items = items,
-                        selectedIndex = AquaPage.entries.indexOf(page),
-                        rightIcon = Icons.Filled.Add,
-                        rightDescription = stringResource(R.string.action_add),
-                        rightVisible = true,
-                        onRightClick = { addOpen = true },
-                        rightContainerColor = CouiTheme.colorScheme.accent,
-                        // 白色焦散在浅色页面上会糊出一圈方块光晕；rgb 保留给边缘高光，alpha 置零关掉焦散。
-                        lightColor = Color.White.copy(alpha = 0f),
-                        themeTint = MaterialTheme.colorScheme.background,
-                        dark = dark,
-                        onSelection = { pageIndex = it.coerceIn(0, AquaPage.entries.lastIndex) },
-                    )
-                } else {
-                    PlainTabBar(items, AquaPage.entries.indexOf(page)) { pageIndex = it }
+            if (!inSubpage) {
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && floatingBar != null) {
+                        CouiBottomBar(
+                            modifier = Modifier.fillMaxWidth().widenFloatBar(),
+                            backdrop = backdrop,
+                            renderer = floatingBar.bottom,
+                            items = items,
+                            selectedIndex = AquaPage.entries.indexOf(page),
+                            rightIcon = Icons.Filled.Add,
+                            rightDescription = stringResource(R.string.action_add),
+                            rightVisible = true,
+                            onRightClick = { addOpen = true },
+                            rightContainerColor = CouiTheme.colorScheme.accent,
+                            // 白色焦散在浅色页面上会糊出一圈方块光晕；rgb 保留给边缘高光，alpha 置零关掉焦散。
+                            lightColor = Color.White.copy(alpha = 0f),
+                            themeTint = MaterialTheme.colorScheme.background,
+                            dark = dark,
+                            onSelection = { pageIndex = it.coerceIn(0, AquaPage.entries.lastIndex) },
+                        )
+                    } else {
+                        PlainTabBar(items, AquaPage.entries.indexOf(page)) { pageIndex = it }
+                    }
                 }
             }
-        }
 
-        SnackbarHost(
-            hostState = snackbar,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 116.dp),
-        )
-
-        if (addOpen) {
-            AquaAddSheet(
-                defaultCupMl = state.metrics?.snapshot?.settings?.defaultCupMl ?: 200,
-                goalMl = state.metrics?.snapshot?.goalMl ?: 2000,
-                types = state.metrics?.snapshot?.drinkTypes ?: DrinkType.builtins,
-                onDismiss = { addOpen = false },
-                onCreateType = { label -> viewModel.addDrinkType(label) },
-                onConfirm = { amount, type, at ->
-                    viewModel.addDrink(amount, type, at)
-                    addOpen = false
-                },
+            SnackbarHost(
+                hostState = snackbar,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 116.dp),
             )
+
+            if (addOpen) {
+                AquaAddSheet(
+                    defaultCupMl = state.metrics?.snapshot?.settings?.defaultCupMl ?: 200,
+                    goalMl = state.metrics?.snapshot?.goalMl ?: 2000,
+                    types = state.metrics?.snapshot?.drinkTypes ?: DrinkType.builtins,
+                    onDismiss = { addOpen = false },
+                    onCreateType = { label -> viewModel.addDrinkType(label) },
+                    onConfirm = { amount, type, at ->
+                        viewModel.addDrink(amount, type, at)
+                        addOpen = false
+                    },
+                )
+            }
         }
     }
+}
+
+private fun routeKey(route: Any): String = when (route) {
+    is AquaPage -> "page:${route.name}"
+    is AquaSubpage -> "sub:${route.name}"
+    else -> "sub:medal_detail"
+}
+
+internal object AquaSharedKeys {
+    const val Reminder = "aqua-shared-reminder"
+    const val Permission = "aqua-shared-permission"
+    const val Appearance = "aqua-shared-appearance"
+    const val Profile = "aqua-shared-profile"
+}
+
+/** 二级页顶部的大标题与「我的」入口共用同一枚图标，进入时由共享元素接续。 */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun SharedSubpageHeader(
+    page: AquaSubpage,
+    state: AquaUiState,
+    collapse: Float,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+) {
+    val snapshot = state.metrics?.snapshot
+    val sharedModifier = with(sharedTransitionScope) {
+        Modifier.sharedElement(
+            rememberSharedContentState(key = page.sharedKey()),
+            animatedVisibilityScope = animatedVisibilityScope,
+        )
+    }
+    Row(
+        modifier = Modifier
+            .padding(start = 4.dp, top = 4.dp, bottom = 14.dp)
+            .graphicsLayer {
+                alpha = (1f - collapse * 1.4f).coerceIn(0f, 1f)
+                translationY = -collapse * 8.dp.toPx()
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (page == AquaSubpage.Profile && snapshot != null) {
+            AquaAvatar(
+                path = snapshot.avatarImage,
+                nickname = snapshot.nickname,
+                size = 30.dp,
+                modifier = sharedModifier,
+            )
+        } else {
+            Icon(
+                imageVector = page.icon(),
+                contentDescription = null,
+                modifier = Modifier.size(30.dp).then(sharedModifier),
+                tint = page.tint(),
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = stringResource(page.titleRes),
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+    }
+}
+
+private fun AquaSubpage.sharedKey(): String = when (this) {
+    AquaSubpage.Reminder -> AquaSharedKeys.Reminder
+    AquaSubpage.Permission -> AquaSharedKeys.Permission
+    AquaSubpage.Appearance -> AquaSharedKeys.Appearance
+    AquaSubpage.Profile -> AquaSharedKeys.Profile
+}
+
+private fun AquaSubpage.icon(): ImageVector = when (this) {
+    AquaSubpage.Reminder -> Icons.Filled.Alarm
+    AquaSubpage.Permission -> Icons.Filled.NotificationsActive
+    AquaSubpage.Appearance -> Icons.Filled.DarkMode
+    AquaSubpage.Profile -> Icons.Filled.Person
+}
+
+private fun AquaSubpage.tint(): Color = when (this) {
+    AquaSubpage.Reminder -> TintReminder
+    AquaSubpage.Permission -> TintPermission
+    AquaSubpage.Appearance -> TintTheme
+    AquaSubpage.Profile -> TintProfile
 }
 
 /** 折叠顶栏：页面顶部是随内容滚动的大标题，滚出后由顶栏内的小标题接替。 */

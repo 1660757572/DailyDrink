@@ -1,10 +1,16 @@
 package com.aquaday.app.ui
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Alarm
@@ -21,13 +27,18 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
+import com.aquaday.app.data.ColorStyle
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaCard
+import com.aquaday.app.ui.components.AquaCardShape
 import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
@@ -37,13 +48,17 @@ import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MineScreen(
     state: AquaUiState,
     viewModel: AquaViewModel,
+    onOpenProfile: () -> Unit,
     onOpenReminder: () -> Unit,
     onOpenPermission: () -> Unit,
     onOpenAppearance: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     val metrics = state.metrics ?: return
     val snapshot = metrics.snapshot
@@ -51,7 +66,47 @@ fun MineScreen(
     var goalDraft by remember(snapshot.goalMl) { mutableFloatStateOf(snapshot.goalMl.toFloat()) }
     var cupDraft by remember(settings.defaultCupMl) { mutableFloatStateOf(settings.defaultCupMl.toFloat()) }
     var showReset by remember { mutableStateOf(false) }
+    val profileAvatar = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Profile)
+    val reminderIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Reminder)
+    val permissionIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Permission)
+    val appearanceIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Appearance)
 
+    AquaCard(contentPadding = false) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(AquaCardShape)
+                .clickable(onClick = onOpenProfile)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AquaAvatar(
+                path = snapshot.avatarImage,
+                nickname = snapshot.nickname,
+                size = 52.dp,
+                modifier = profileAvatar,
+            )
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = profileDisplayName(snapshot.nickname),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = stringResource(R.string.profile_summary),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Chevron()
+        }
+    }
+
+    Spacer(Modifier.height(16.dp))
     AquaSectionTitle(stringResource(R.string.mine_section_target))
     AquaCard {
         AquaSliderRow(
@@ -91,6 +146,7 @@ fun MineScreen(
                 ),
                 icon = Icons.Filled.Alarm,
                 iconTint = TintReminder,
+                iconModifier = reminderIcon,
                 onClick = onOpenReminder,
                 trailing = { Chevron() },
             )
@@ -107,15 +163,17 @@ fun MineScreen(
                 },
                 icon = Icons.Filled.NotificationsActive,
                 iconTint = TintPermission,
+                iconModifier = permissionIcon,
                 onClick = onOpenPermission,
                 trailing = { Chevron() },
             )
             AquaDivider()
             AquaRow(
                 title = stringResource(R.string.mine_subpage_appearance),
-                summary = appearanceSummary(snapshot.themeMode, snapshot.dynamicColor, snapshot.backgroundImage != null),
+                summary = appearanceSummary(snapshot.themeMode, snapshot.colorStyle, snapshot.backgroundImage != null),
                 icon = Icons.Filled.DarkMode,
                 iconTint = TintTheme,
+                iconModifier = appearanceIcon,
                 onClick = onOpenAppearance,
                 trailing = { Chevron() },
             )
@@ -186,8 +244,18 @@ private fun Chevron() {
     )
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun appearanceSummary(mode: ThemeMode, dynamicColor: Boolean, hasBackground: Boolean): String {
+private fun sharedIconModifier(
+    scope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    key: String,
+): Modifier = with(scope) {
+    Modifier.sharedElement(rememberSharedContentState(key), animatedVisibilityScope)
+}
+
+@Composable
+private fun appearanceSummary(mode: ThemeMode, colorStyle: ColorStyle, hasBackground: Boolean): String {
     val parts = buildList {
         add(
             stringResource(
@@ -198,7 +266,7 @@ private fun appearanceSummary(mode: ThemeMode, dynamicColor: Boolean, hasBackgro
                 },
             ),
         )
-        if (dynamicColor) add(stringResource(R.string.mine_appearance_dynamic))
+        if (colorStyle != ColorStyle.Default) add(colorStyle.label())
         if (hasBackground) add(stringResource(R.string.mine_appearance_background))
     }
     return parts.joinToString(" · ")

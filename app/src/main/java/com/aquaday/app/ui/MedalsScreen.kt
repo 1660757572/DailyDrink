@@ -2,7 +2,11 @@ package com.aquaday.app.ui
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,23 +19,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
 import com.aquaday.app.data.AchievementProgress
@@ -39,20 +39,31 @@ import com.aquaday.app.data.AchievementTier
 import com.aquaday.app.data.Achievements
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaChip
+import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaLinearProgress
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.aquaday.app.ui.components.AquaTileShape
+import com.aquaday.app.ui.components.bleedHorizontal
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.chip.CouiChipTabItem
 import com.itos.coui.chip.CouiChipTabRow
 import com.itos.coui.theme.CouiTheme
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun MedalsScreen(state: AquaUiState, backdrop: CouiBackdrop, dark: Boolean) {
+fun MedalsScreen(
+    state: AquaUiState,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+    filter: Int,
+    onFilterChange: (Int) -> Unit,
+    onOpenDetail: (Int) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+) {
     val metrics = state.metrics ?: return
     val all = state.achievements
     val unlockedCount = all.count { it.unlocked }
-    var filter by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(stringResource(R.string.medal_filter_all)) + Achievements.categories
     val visible = if (filter == 0) all else all.filter { it.achievement.category == tabs[filter] }
 
@@ -92,7 +103,7 @@ fun MedalsScreen(state: AquaUiState, backdrop: CouiBackdrop, dark: Boolean) {
         CouiCategoryTabs(
             labels = tabs,
             selected = filter,
-            onSelect = { filter = it },
+            onSelect = onFilterChange,
             backdrop = backdrop,
             dark = dark,
         )
@@ -103,15 +114,28 @@ fun MedalsScreen(state: AquaUiState, backdrop: CouiBackdrop, dark: Boolean) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             tabs.forEachIndexed { index, label ->
-                AquaChip(text = label, selected = index == filter, onClick = { filter = index })
+                AquaChip(text = label, selected = index == filter, onClick = { onFilterChange(index) })
             }
         }
     }
     Spacer(Modifier.height(8.dp))
     AquaCard {
         visible.forEachIndexed { index, progress ->
-            MedalRow(progress)
-            if (index != visible.lastIndex) Spacer(Modifier.height(10.dp))
+            MedalRow(
+                progress = progress,
+                onClick = { onOpenDetail(index) },
+                sharedModifier = with(sharedTransitionScope) {
+                    Modifier.sharedElement(
+                        rememberSharedContentState(key = medalSharedKey(progress.achievement.id)),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                    )
+                },
+            )
+            if (index != visible.lastIndex) {
+                Spacer(Modifier.height(14.dp))
+                AquaDivider()
+                Spacer(Modifier.height(14.dp))
+            }
         }
     }
 }
@@ -137,23 +161,6 @@ private fun CouiCategoryTabs(
         dark = dark,
         itemSpacing = 6.dp,
     )
-}
-
-/** 分类栏自带 16dp 内容边距；向外多量 32dp 再左移，让首个分类与页面内容左缘对齐。 */
-private fun Modifier.bleedHorizontal(): Modifier = layout { measurable, constraints ->
-    val inset = 16.dp.roundToPx()
-    val width = constraints.maxWidth + inset * 2
-    val placeable = measurable.measure(
-        Constraints(
-            minWidth = width,
-            maxWidth = width,
-            minHeight = constraints.minHeight,
-            maxHeight = constraints.maxHeight,
-        ),
-    )
-    layout(constraints.maxWidth, placeable.height) {
-        placeable.place(-inset, 0)
-    }
 }
 
 @Composable
@@ -182,15 +189,23 @@ private fun MedalSummary(modifier: Modifier, label: String, value: Int, unit: St
 }
 
 @Composable
-private fun MedalRow(progress: AchievementProgress) {
+private fun MedalRow(progress: AchievementProgress, onClick: () -> Unit, sharedModifier: Modifier) {
     val achievement = progress.achievement
     val tierColor = tierColor(achievement.tier)
     val accent = CouiTheme.colorScheme.accent
     val dimmed = !progress.unlocked
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(AquaTileShape)
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(
             Modifier
                 .size(42.dp)
+                .then(sharedModifier)
                 .clip(RoundedCornerShape(percent = 32))
                 .background(if (progress.unlocked) tierColor.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
             contentAlignment = Alignment.Center,
@@ -237,11 +252,18 @@ private fun MedalRow(progress: AchievementProgress) {
                 color = if (progress.unlocked) accent else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        Spacer(Modifier.width(10.dp))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
+        )
     }
 }
 
 @Composable
-private fun tierColor(tier: AchievementTier): Color = when (tier) {
+internal fun tierColor(tier: AchievementTier): Color = when (tier) {
     AchievementTier.Bronze -> Color(0xFFCD8C52)
     AchievementTier.Silver -> Color(0xFF9FB0C0)
     AchievementTier.Gold -> Color(0xFFE0A63C)

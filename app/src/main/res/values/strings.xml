@@ -13,6 +13,9 @@
     <string name="action_undo">撤销</string>
     <string name="action_cancel">取消</string>
     <string name="action_confirm">确定</string>
+    <string name="action_use">使用</string>
+    <string name="action_continue">继续</string>
+    <string name="action_delete">删除</string>
     <string name="action_grant">去开启</string>
     <string name="action_back">返回</string>
 
@@ -60,6 +63,23 @@
     <string name="medal_complete_rate">完成度 %1$d%%</string>
     <string name="medal_current_streak">当前连续 %1$d 天</string>
     <string name="medal_total_volume">累计补水 %1$s L</string>
+    <string name="medal_detail_title">徽章详情</string>
+    <string name="medal_share">分享</string>
+    <string name="medal_share_title">分享这枚徽章</string>
+    <string name="medal_share_text">我在水杯点亮了「%1$s」——%2$s</string>
+    <string name="medal_share_locked_hint">点亮这枚徽章后即可分享</string>
+
+    <string name="mine_subpage_profile">个人信息</string>
+    <string name="profile_summary">管理昵称与头像</string>
+    <string name="profile_default_name">水杯用户</string>
+    <string name="profile_avatar_section">头像</string>
+    <string name="profile_avatar_description">用户头像</string>
+    <string name="profile_avatar_hint">图片保存在应用内，只在这台设备上显示</string>
+    <string name="action_remove_avatar">移除头像</string>
+    <string name="profile_nickname_section">昵称</string>
+    <string name="profile_nickname_label">昵称</string>
+    <string name="profile_nickname_placeholder">给自己起个名字</string>
+    <string name="profile_nickname_hint">用于「我的」页面与徽章分享</string>
 
     <string name="mine_section_target">每日目标</string>
     <string name="mine_section_reminder">提醒</string>
@@ -78,6 +98,18 @@
     <string name="appearance_section_background">背景</string>
     <string name="setting_dynamic_color">动态取色</string>
     <string name="setting_dynamic_color_summary">从系统壁纸提取主色调（Material You）</string>
+    <string name="color_style_default">水蓝</string>
+    <string name="color_style_dynamic">动态取色</string>
+    <string name="color_style_grass">草野</string>
+    <string name="color_style_lemon">柠檬</string>
+    <string name="color_style_mono">黑白</string>
+    <string name="color_style_custom">自定义颜色</string>
+    <string name="appearance_color_hint">强调色会应用到按钮、圆环与选中状态</string>
+    <string name="appearance_color_custom_summary">自己挑一个主色调</string>
+    <string name="color_custom_warning">使用自定义颜色时，部分地方的显示可能会有问题，例如通知与系统控件仍会使用默认配色。</string>
+    <string name="color_preview">预览</string>
+    <string name="color_hue">色相</string>
+    <string name="color_saturation">饱和度</string>
     <string name="setting_background_summary">图片保存在应用内，并叠加半透明遮罩保证文字可读</string>
     <string name="action_choose_image">选择图片</string>
     <string name="action_remove_image">移除背景</string>
@@ -96,6 +128,7 @@
     <string name="setting_window_summary_until_midnight">%1$02d:00 - 24:00</string>
     <string name="setting_live_on">喝水实时活动</string>
     <string name="setting_live_summary">常驻通知显示进度与倒计时</string>
+    <string name="setting_live_hint">如果没有正常显示，在通知设置里检查是否允许「流体云显示实时活动」</string>
     <string name="setting_sound">提示音</string>
     <string name="setting_vibrate">震动</string>
     <string name="setting_theme">外观模式</string>
@@ -137,6 +170,8 @@
     <string name="home_idle_summary">距上次活动 %1$s</string>
     <string name="home_today_total">%1$d 杯 · 直接量 %2$d ml · 有效补水 %3$d ml</string>
     <string name="home_delete_entry">删除这条记录</string>
+    <string name="home_delete_title">删除记录</string>
+    <string name="home_delete_confirm">将删除 %1$s 记录的 %2$d ml，且无法恢复。</string>
 
     <string name="calendar_prev_month">上个月</string>
     <string name="calendar_next_month">下个月</string>
@@ -168,8 +203,9 @@
     <string name="onboarding_back">上一步</string>
     <string name="onboarding_welcome_title">欢迎使用水杯</string>
     <string name="onboarding_welcome_body">按时补水比一次喝很多更重要。先用一分钟完成基础设置。</string>
-    <string name="onboarding_goal_title">设定每日目标</string>
-    <string name="onboarding_goal_body">目标会显示在首页圆环与实时活动中，之后也能在「我的」里修改。</string>
+    <string name="onboarding_profile_title">设置个人信息</string>
+    <string name="onboarding_profile_body">起个昵称、挑张头像，之后在「我的 → 个人信息」里随时能改。</string>
+    <string name="onboarding_goal_title">设定每日目标</string>    <string name="onboarding_goal_body">目标会显示在首页圆环与实时活动中，之后也能在「我的」里修改。</string>
     <string name="onboarding_goal_hint">建议成年人每天 1500 - 2500 ml</string>
     <string name="onboarding_goal_value">%1$d ml</string>
     <string name="onboarding_reminder_title">安排喝水提醒</string>

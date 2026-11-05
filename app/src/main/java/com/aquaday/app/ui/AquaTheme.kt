@@ -20,9 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.aquaday.app.data.ColorStyle
 import com.aquaday.app.data.ThemeMode
 import com.itos.coui.shape.CouiShape
 import com.itos.coui.theme.CouiColorScheme
@@ -32,6 +35,16 @@ import kotlinx.coroutines.withContext
 
 private val AquaPrimary = Color(0xFF0B84FC)
 private val AquaPrimaryDark = Color(0xFF4FA8FF)
+
+/** 固定色板成对给出，深色模式改用更亮的一档保证对比度。 */
+private data class AccentPair(val light: Color, val dark: Color)
+
+private val ColorStyles = mapOf(
+    ColorStyle.Default to AccentPair(AquaPrimary, AquaPrimaryDark),
+    ColorStyle.Grass to AccentPair(Color(0xFF2F8F4E), Color(0xFF79D68C)),
+    ColorStyle.Lemon to AccentPair(Color(0xFFB07A00), Color(0xFFFFD24A)),
+    ColorStyle.Mono to AccentPair(Color(0xFF1C1C1E), Color(0xFFF2F2F7)),
+)
 
 private val LightScheme: ColorScheme = lightColorScheme(
     primary = AquaPrimary,
@@ -90,6 +103,32 @@ private fun ColorScheme.withDynamicAccent(dynamic: ColorScheme): ColorScheme = c
     secondaryContainer = dynamic.secondaryContainer,
 )
 
+/** 固定色板只替换强调色，容器色由页面底色与强调色混合，避免出现第二套色相。 */
+private fun ColorScheme.withAccent(accent: Color): ColorScheme {
+    val onAccent = if (accent.luminance() > 0.5f) Color.Black else Color.White
+    val container = lerp(surface, accent, 0.16f)
+    return copy(
+        primary = accent,
+        onPrimary = onAccent,
+        primaryContainer = container,
+        onPrimaryContainer = accent,
+        inversePrimary = accent,
+        secondary = accent,
+        onSecondary = onAccent,
+        secondaryContainer = container,
+    )
+}
+
+/** 自定义色可能过暗或过亮，按深色模式向白色/黑色偏移，保证文字与圆环仍可辨认。 */
+private fun readableAccent(color: Color, dark: Boolean): Color {
+    val luminance = color.luminance()
+    return when {
+        dark && luminance < 0.22f -> lerp(color, Color.White, 0.45f)
+        !dark && luminance > 0.62f -> lerp(color, Color.Black, 0.32f)
+        else -> color
+    }
+}
+
 /** COUI 组件在消费处读取 CouiColorScheme，accent 必须与 M3 primary 保持一致。 */
 private fun couiScheme(dark: Boolean, colors: ColorScheme): CouiColorScheme = CouiColorScheme(
     accent = colors.primary,
@@ -106,14 +145,24 @@ private fun couiScheme(dark: Boolean, colors: ColorScheme): CouiColorScheme = Co
 )
 
 @Composable
-fun AquaTheme(dark: Boolean, dynamicColor: Boolean = false, content: @Composable () -> Unit) {
+fun AquaTheme(
+    dark: Boolean,
+    colorStyle: ColorStyle = ColorStyle.Default,
+    customAccent: Int? = null,
+    content: @Composable () -> Unit,
+) {
     val context = LocalContext.current
-    val colors = if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val base = if (dark) DarkScheme else LightScheme
-        val dynamic = if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        base.withDynamicAccent(dynamic)
-    } else {
-        if (dark) DarkScheme else LightScheme
+    val base = if (dark) DarkScheme else LightScheme
+    val colors = when {
+        colorStyle == ColorStyle.Dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val dynamic = if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            base.withDynamicAccent(dynamic)
+        }
+        colorStyle == ColorStyle.Custom && customAccent != null ->
+            base.withAccent(readableAccent(Color(customAccent), dark))
+        else -> ColorStyles[colorStyle]
+            ?.let { base.withAccent(if (dark) it.dark else it.light) }
+            ?: base
     }
     MaterialTheme(colorScheme = colors) {
         CouiTheme(darkTheme = dark, colorScheme = couiScheme(dark, colors), materialTint = colors.surface) {

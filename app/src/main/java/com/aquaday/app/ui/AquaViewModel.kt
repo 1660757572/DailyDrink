@@ -8,6 +8,7 @@ import com.aquaday.app.data.Achievements
 import com.aquaday.app.data.AquaMetrics
 import com.aquaday.app.data.AquaPermissions
 import com.aquaday.app.data.CalendarCell
+import com.aquaday.app.data.ColorStyle
 import com.aquaday.app.data.DrinkEvent
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.data.HydrationMetrics
@@ -77,9 +78,15 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { repository.setThemeMode(mode) }
 
-    fun setDynamicColor(enabled: Boolean) = viewModelScope.launch { repository.setDynamicColor(enabled) }
+    fun setColorStyle(style: ColorStyle) = viewModelScope.launch { repository.setColorStyle(style) }
+
+    fun setCustomAccent(argb: Int) = viewModelScope.launch { repository.setCustomAccent(argb) }
 
     fun setBackgroundImage(uri: android.net.Uri?) = viewModelScope.launch { repository.setBackgroundImage(uri) }
+
+    fun setAvatarImage(uri: android.net.Uri?) = viewModelScope.launch { repository.setAvatarImage(uri) }
+
+    fun setNickname(nickname: String) = viewModelScope.launch { repository.setNickname(nickname) }
 
     fun completeOnboarding() = viewModelScope.launch { repository.completeOnboarding() }
 

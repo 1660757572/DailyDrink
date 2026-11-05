@@ -71,19 +71,42 @@ class HydrationRepository(private val context: Context) {
 
     suspend fun setThemeMode(mode: ThemeMode) = store.setThemeMode(mode)
 
-    suspend fun setDynamicColor(enabled: Boolean) = store.setDynamicColor(enabled)
+    suspend fun setColorStyle(style: ColorStyle) = store.setColorStyle(style)
+
+    suspend fun setCustomAccent(argb: Int?) = store.setCustomAccent(argb)
 
     suspend fun completeOnboarding() = store.setOnboarded(true)
 
     /** 图片复制到应用私有目录，避免相册条目被删除后背景丢失；旧文件随后清理。 */
-    suspend fun setBackgroundImage(uri: Uri?) = withContext(Dispatchers.IO) {
-        val previous = store.snapshot.first().backgroundImage
+    suspend fun setBackgroundImage(uri: Uri?) = swapImage(
+        uri = uri,
+        prefix = "background",
+        previous = store.snapshot.first().backgroundImage,
+        write = store::setBackgroundImage,
+    )
+
+    suspend fun setNickname(nickname: String) = store.setNickname(nickname)
+
+    /** 头像与背景同一套落盘逻辑，只是前缀不同。 */
+    suspend fun setAvatarImage(uri: Uri?) = swapImage(
+        uri = uri,
+        prefix = "avatar",
+        previous = store.snapshot.first().avatarImage,
+        write = store::setAvatarImage,
+    )
+
+    private suspend fun swapImage(
+        uri: Uri?,
+        prefix: String,
+        previous: String?,
+        write: suspend (String?) -> Unit,
+    ) = withContext(Dispatchers.IO) {
         if (uri == null) {
-            store.setBackgroundImage(null)
+            write(null)
             previous?.let { File(it).delete() }
             return@withContext
         }
-        val target = File(context.filesDir, "background_${System.currentTimeMillis()}.img")
+        val target = File(context.filesDir, "${prefix}_${System.currentTimeMillis()}.img")
         val copied = runCatching {
             context.contentResolver.openInputStream(uri)?.use { input ->
                 target.outputStream().use { output -> input.copyTo(output) }
@@ -91,11 +114,11 @@ class HydrationRepository(private val context: Context) {
             target.length() > 0
         }.getOrDefault(false)
         if (copied) {
-            store.setBackgroundImage(target.absolutePath)
+            write(target.absolutePath)
             previous?.let { older -> if (older != target.absolutePath) File(older).delete() }
         } else {
             target.delete()
-            Log.w(TAG, "setBackgroundImage: 无法读取所选图片")
+            Log.w(TAG, "swapImage: 无法读取所选图片（$prefix）")
         }
     }
 

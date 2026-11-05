@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -91,6 +93,12 @@ fun ReminderSettingsScreen(state: AquaUiState, viewModel: AquaViewModel) {
                 icon = Icons.Filled.WaterDrop,
                 iconTint = TintLive,
                 onCheckedChange = { enabled -> viewModel.updateSettings { it.copy(liveActivityEnabled = enabled) } },
+            )
+            Text(
+                text = stringResource(R.string.setting_live_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 36.dp, end = 16.dp, bottom = 10.dp),
             )
             AquaDivider()
             AquaSwitchRow(

@@ -1,5 +1,8 @@
 package com.aquaday.app.ui
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +23,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,6 +43,10 @@ import com.aquaday.app.ui.components.AquaProgressRing
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.itos.coui.backdrop.CouiBackdrop
+import com.itos.coui.dialog.CouiAlertDialog
+import com.itos.coui.dialog.CouiDialogAction
+import com.itos.coui.dialog.CouiDialogActionStyle
+import com.itos.coui.dialog.CouiDialogDefaults
 import com.itos.coui.theme.CouiTheme
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -57,11 +68,18 @@ fun HomeScreen(
     val events = metrics.snapshot.events
         .filter { it.at.toLocalDate() == today.date }
         .sortedByDescending { it.at }
+    // 圆环跟随每次记录平滑推进，冷启动时也从 0 长到当前进度。
+    val animatedRatio by animateFloatAsState(
+        targetValue = today.ratio,
+        animationSpec = tween(durationMillis = 720, easing = FastOutSlowInEasing),
+        label = "home-ring",
+    )
+    var pendingDelete by remember { mutableStateOf<DrinkEvent?>(null) }
 
     AquaCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             AquaProgressRing(
-                ratio = today.ratio,
+                ratio = animatedRatio,
                 modifier = Modifier.size(120.dp),
                 strokeWidth = 11f,
             )
@@ -91,7 +109,7 @@ fun HomeScreen(
                     text = stringResource(
                         R.string.home_goal_line,
                         goal,
-                        (today.ratio * 100).roundToInt().coerceAtMost(999),
+                        (animatedRatio * 100).roundToInt().coerceAtMost(999),
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -128,14 +146,14 @@ fun HomeScreen(
         ) {
             HomeQuickAmounts.forEach { amount ->
                 AquaChip(
-                    text = "+$amount",
+                    text = "$amount ml",
                     selected = false,
                     onClick = { viewModel.addDrink(amount) },
                     modifier = Modifier.weight(1f),
                 )
             }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(18.dp))
         AquaLongButton(
             text = stringResource(R.string.action_add),
             icon = Icons.Filled.LocalDrink,
@@ -182,7 +200,7 @@ fun HomeScreen(
         } else {
             events.forEachIndexed { index, event ->
                 Column {
-                    HomeLogRow(event) { viewModel.deleteEvent(event.id) }
+                    HomeLogRow(event) { pendingDelete = event }
                     if (index != events.lastIndex) {
                         HorizontalDivider(
                             thickness = 0.6.dp,
@@ -205,6 +223,27 @@ fun HomeScreen(
                     .padding(start = AquaCardHorizontalPadding, end = AquaCardHorizontalPadding, top = 10.dp, bottom = 12.dp),
             )
         }
+    }
+
+    pendingDelete?.let { event ->
+        CouiAlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = stringResource(R.string.home_delete_title),
+            message = stringResource(R.string.home_delete_confirm, event.at.asClock(), event.amountMl),
+            confirmAction = CouiDialogAction(
+                text = stringResource(R.string.action_delete),
+                onClick = {
+                    viewModel.deleteEvent(event.id)
+                    pendingDelete = null
+                },
+                style = CouiDialogActionStyle.Primary,
+                colors = CouiDialogDefaults.primaryActionColors(MaterialTheme.colorScheme.error),
+            ),
+            dismissAction = CouiDialogAction(
+                text = stringResource(R.string.action_cancel),
+                onClick = { pendingDelete = null },
+            ),
+        )
     }
 }
 

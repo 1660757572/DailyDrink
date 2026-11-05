@@ -41,6 +41,8 @@ object HydrationMetrics {
             .map { it.key }
             .sorted()
 
+        val byDayEvents = events.groupBy { it.at.toLocalDate() }
+
         return AquaMetrics(
             snapshot = snapshot,
             today = current,
@@ -56,8 +58,19 @@ object HydrationMetrics {
             distinctTypes = events.map { it.type }.distinct().size,
             bestMonthReachedDays = monthReached.values.maxOfOrNull { it.size } ?: 0,
             perfectMonths = perfectMonths,
+            recordedDays = byDay.size,
+            bestMonthMl = events.groupBy { YearMonth.from(it.at.toLocalDate()) }
+                .values.maxOfOrNull { group -> group.sumOf { it.effectiveMl } } ?: 0,
+            maxDailyBands = byDayEvents.values.maxOfOrNull { group ->
+                group.map { timeBand(it.at.hour) }.distinct().size
+            } ?: 0,
+            customTypeCount = snapshot.drinkTypes.count { !it.builtin },
+            topTypeCount = events.groupBy { it.type.id }.values.maxOfOrNull { it.size } ?: 0,
         )
     }
+
+    /** 一天按 6 小时切成 4 段，用于「全天候补水」这类时段成就。 */
+    private fun timeBand(hour: Int): Int = hour / 6
 
     /** 今天尚未达标时不断链，从昨天往前连续计数。 */
     fun currentStreak(reachedDays: List<LocalDate>, today: LocalDate): Int {

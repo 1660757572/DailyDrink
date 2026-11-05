@@ -5,22 +5,23 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- 水滴：顶点收束、底部浑圆，整体约 34×51dp，明显小于原先的四角星且仍位于 66dp 安全区内。 -->
+    <!-- 水滴：顶点收束、底部浑圆，浅蓝渐变从左上的高光过渡到右下的水色。 -->
     <path android:pathData="M54,27C47.5,38.5 37,48.5 37,59.5C37,69.9 44.6,77.5 54,77.5C63.4,77.5 71,69.9 71,59.5C71,48.5 60.5,38.5 54,27Z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:type="sweep"
-                android:centerX="54"
-                android:centerY="54">
-                <item android:offset="0.0" android:color="#FF62D4FF" />
-                <item android:offset="0.18" android:color="#FF2E86FF" />
-                <item android:offset="0.36" android:color="#FF7B61FF" />
-                <item android:offset="0.52" android:color="#FFFF5FA2" />
-                <item android:offset="0.68" android:color="#FFFFA45E" />
-                <item android:offset="0.82" android:color="#FFFFD75E" />
-                <item android:offset="0.92" android:color="#FF4CD8A0" />
-                <item android:offset="1.0" android:color="#FF62D4FF" />
+                android:type="linear"
+                android:startX="46"
+                android:startY="30"
+                android:endX="66"
+                android:endY="76">
+                <item android:offset="0.0" android:color="#FFC4E9FF" />
+                <item android:offset="0.5" android:color="#FF8FD2FB" />
+                <item android:offset="1.0" android:color="#FF5FB3F2" />
             </gradient>
         </aapt:attr>
     </path>
+    <!-- 左上高光，避免纯色水滴在白色背景上显得扁平。 -->
+    <path
+        android:fillColor="#59FFFFFF"
+        android:pathData="M47.5,53.5C47.5,47.8 50.6,43.3 54.4,40.6C51.5,46.2 51.2,51.6 53.4,56.1C54.9,59.2 53.6,63.4 49.6,64.6C48.2,61.4 47.5,57.6 47.5,53.5Z" />
 </vector>

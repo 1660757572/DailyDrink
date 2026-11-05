@@ -38,6 +38,9 @@ data class DrinkEvent(
 
 enum class ThemeMode { System, Light, Dark }
 
+/** 强调色方案：固定模板之外还有跟随壁纸与用户自选。 */
+enum class ColorStyle { Default, Dynamic, Grass, Lemon, Mono, Custom }
+
 data class ReminderSettings(
     val enabled: Boolean = true,
     val intervalMinutes: Int = 60,
@@ -73,6 +76,11 @@ data class AquaMetrics(
     val distinctTypes: Int,
     val bestMonthReachedDays: Int,
     val perfectMonths: List<java.time.YearMonth>,
+    val recordedDays: Int,
+    val bestMonthMl: Int,
+    val maxDailyBands: Int,
+    val customTypeCount: Int,
+    val topTypeCount: Int,
 ) {
     val remainingMl: Int get() = (snapshot.goalMl - today.totalMl).coerceAtLeast(0)
     val goalRatio: Float get() = if (snapshot.goalMl <= 0) 0f else (today.totalMl.toFloat() / snapshot.goalMl).coerceIn(0f, 1f)
@@ -87,10 +95,15 @@ data class AquaSnapshot(
     val themeMode: ThemeMode,
     val lastReminderAt: LocalDateTime?,
     val drinkTypes: List<DrinkType> = DrinkType.builtins,
-    val dynamicColor: Boolean = false,
+    val colorStyle: ColorStyle = ColorStyle.Default,
+    val customAccent: Int? = null,
     val backgroundImage: String? = null,
     val onboarded: Boolean = false,
+    val nickname: String = "",
+    val avatarImage: String? = null,
 ) {
+    val dynamicColor: Boolean get() = colorStyle == ColorStyle.Dynamic
+
     fun typeOf(id: String): DrinkType =
         drinkTypes.firstOrNull { it.id == id } ?: DrinkType.WATER
 

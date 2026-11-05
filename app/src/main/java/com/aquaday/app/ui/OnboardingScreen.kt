@@ -1,5 +1,8 @@
 package com.aquaday.app.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -36,6 +39,7 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -70,21 +74,25 @@ import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.slider.CouiSlider
 import com.itos.coui.theme.CouiTheme
 
-private const val STEP_COUNT = 4
+private const val STEP_COUNT = 5
 
-/** 首次启动的引导：目标 → 提醒 → 权限，风格对齐 iPhone 激活流程。 */
+/** 首次启动的引导：个人信息 → 目标 → 提醒 → 权限，风格对齐 iPhone 激活流程。 */
 @Composable
 fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
     val snapshot = state.metrics?.snapshot ?: return
     val settings = snapshot.settings
     val dark = rememberIsDark(snapshot.themeMode)
     var step by rememberSaveable { mutableIntStateOf(0) }
+    var nicknameDraft by remember { mutableStateOf(snapshot.nickname) }
     var goalDraft by remember { mutableFloatStateOf(snapshot.goalMl.toFloat()) }
     var reminderEnabled by remember { mutableStateOf(settings.enabled) }
     var intervalDraft by remember { mutableFloatStateOf(settings.intervalMinutes.toFloat()) }
     var startHour by remember { mutableIntStateOf(settings.activeStartHour) }
     var endHour by remember { mutableIntStateOf(settings.activeEndHour) }
     val backdrop = rememberCouiBackdrop()
+    val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) viewModel.setAvatarImage(uri)
+    }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshPermissions() }
 
@@ -106,14 +114,14 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
 
     fun next() {
         when (step) {
-            0 -> step = 1
-            1 -> {
-                commitGoal()
-                step = 2
-            }
+            0, 1 -> step += 1
             2 -> {
-                commitReminder()
+                commitGoal()
                 step = 3
+            }
+            3 -> {
+                commitReminder()
+                step = 4
             }
             else -> finish()
         }
@@ -183,8 +191,9 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
                             text = stringResource(
                                 when (current) {
                                     0 -> R.string.onboarding_welcome_title
-                                    1 -> R.string.onboarding_goal_title
-                                    2 -> R.string.onboarding_reminder_title
+                                    1 -> R.string.onboarding_profile_title
+                                    2 -> R.string.onboarding_goal_title
+                                    3 -> R.string.onboarding_reminder_title
                                     else -> R.string.onboarding_permission_title
                                 },
                             ),
@@ -198,8 +207,9 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
                             text = stringResource(
                                 when (current) {
                                     0 -> R.string.onboarding_welcome_body
-                                    1 -> R.string.onboarding_goal_body
-                                    2 -> R.string.onboarding_reminder_body
+                                    1 -> R.string.onboarding_profile_body
+                                    2 -> R.string.onboarding_goal_body
+                                    3 -> R.string.onboarding_reminder_body
                                     else -> R.string.onboarding_permission_body
                                 },
                             ),
@@ -210,8 +220,21 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
                         )
                         Spacer(Modifier.height(28.dp))
                         when (current) {
-                            1 -> GoalStep(goalDraft = goalDraft, onGoalChange = { goalDraft = it })
-                            2 -> ReminderStep(
+                            1 -> ProfileStep(
+                                nickname = nicknameDraft,
+                                avatarPath = snapshot.avatarImage,
+                                onNicknameChange = {
+                                    nicknameDraft = it.take(NICKNAME_MAX)
+                                    viewModel.setNickname(nicknameDraft)
+                                },
+                                onPickAvatar = {
+                                    avatarPicker.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                    )
+                                },
+                            )
+                            2 -> GoalStep(goalDraft = goalDraft, onGoalChange = { goalDraft = it })
+                            3 -> ReminderStep(
                                 enabled = reminderEnabled,
                                 onEnabledChange = { reminderEnabled = it },
                                 intervalDraft = intervalDraft,
@@ -221,7 +244,7 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
                                 onStartChange = { startHour = it },
                                 onEndChange = { endHour = it },
                             )
-                            3 -> {
+                            4 -> {
                                 PermissionSettingsScreen(state, viewModel)
                                 Spacer(Modifier.height(12.dp))
                                 Text(
@@ -275,6 +298,41 @@ private fun StepDots(step: Int) {
                         if (active) CouiTheme.colorScheme.accent
                         else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f),
                     ),
+            )
+        }
+    }
+}
+
+/** 引导里的个人信息步：只放头像与昵称，图片仍走系统选择器，与「我的 → 个人信息」同一套写入。 */
+@Composable
+private fun ProfileStep(
+    nickname: String,
+    avatarPath: String?,
+    onNicknameChange: (String) -> Unit,
+    onPickAvatar: () -> Unit,
+) {
+    AquaCard {
+        Column(
+            Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            AquaAvatar(path = avatarPath, nickname = nickname, size = 88.dp)
+            Spacer(Modifier.height(14.dp))
+            AquaChip(text = stringResource(R.string.action_choose_image), selected = true, onClick = onPickAvatar)
+            Spacer(Modifier.height(18.dp))
+            OutlinedTextField(
+                value = nickname,
+                onValueChange = onNicknameChange,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text(stringResource(R.string.profile_nickname_label)) },
+                placeholder = { Text(stringResource(R.string.profile_nickname_placeholder)) },
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.profile_nickname_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

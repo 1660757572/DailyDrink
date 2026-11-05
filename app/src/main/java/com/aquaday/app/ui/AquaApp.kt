@@ -81,6 +81,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -194,8 +195,11 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
         },
     )
     val medalItems = remember(state.achievements, medalFilter) {
-        if (medalFilter <= 0) state.achievements
-        else state.achievements.filter { it.achievement.category == Achievements.categories[medalFilter - 1] }
+        when (medalFilter) {
+            0 -> state.achievements
+            1 -> state.achievements.filter { it.unlocked }
+            else -> state.achievements.filter { it.achievement.category == Achievements.categories[medalFilter - 2] }
+        }
     }
     val shellSnapshot = state.metrics?.snapshot
     val backgroundImage = shellSnapshot?.backgroundImage
@@ -305,7 +309,11 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                     sharedTransitionScope = this@SharedTransitionLayout,
                                     animatedVisibilityScope = animatedVisibilityScope,
                                 )
-                                is AquaPage -> AquaLargeTitle(title = stringResource(target.titleRes), collapse = collapse)
+                                is AquaPage -> if (target == AquaPage.Home) {
+                                    AquaGreeting(state, collapse)
+                                } else {
+                                    AquaLargeTitle(title = stringResource(target.titleRes), collapse = collapse)
+                                }
                                 else -> AquaLargeTitle(title = routeTitle, collapse = collapse)
                             }
                             when (target) {
@@ -519,6 +527,47 @@ private fun AquaSubpage.tint(): Color = when (this) {
     AquaSubpage.Appearance -> TintTheme
     AquaSubpage.Profile -> TintProfile
     AquaSubpage.About -> TintAbout
+}
+
+/** 首页大标题换成按时段变化的问候语，页签身份仍由折叠后的顶栏小标题承担。 */
+@Composable
+private fun AquaGreeting(state: AquaUiState, collapse: Float) {
+    val metrics = state.metrics ?: return
+    val greeting = stringResource(
+        when (state.now.hour) {
+            in 5..10 -> R.string.home_greeting_morning
+            in 11..13 -> R.string.home_greeting_noon
+            in 14..17 -> R.string.home_greeting_afternoon
+            else -> R.string.home_greeting_evening
+        },
+    )
+    Column(
+        Modifier
+            .padding(start = 4.dp, top = 4.dp, bottom = 14.dp)
+            .graphicsLayer {
+                alpha = (1f - collapse * 1.4f).coerceIn(0f, 1f)
+                translationY = -collapse * 8.dp.toPx()
+            },
+    ) {
+        Text(
+            text = stringResource(
+                R.string.home_greeting_format,
+                greeting,
+                profileDisplayName(metrics.snapshot.nickname),
+            ),
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.home_greeting_days, metrics.recordedDays),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 /** 折叠顶栏：页面顶部是随内容滚动的大标题，滚出后由顶栏内的小标题接替。 */

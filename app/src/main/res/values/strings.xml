@@ -44,6 +44,12 @@
     <string name="home_next_reminder">下次提醒 %1$s</string>
     <string name="home_reminder_paused">提醒已暂停</string>
     <string name="home_reached_banner">今日目标已达成，再多喝一杯算奖励</string>
+    <string name="home_greeting_morning">早上好</string>
+    <string name="home_greeting_noon">中午好</string>
+    <string name="home_greeting_afternoon">下午好</string>
+    <string name="home_greeting_evening">晚上好</string>
+    <string name="home_greeting_format">%1$s，%2$s</string>
+    <string name="home_greeting_days">已陪你记录 %1$d 天</string>
     <string name="home_log_entry">%1$s · %2$d ml · %3$s</string>
     <string name="home_progress_value">%1$d / %2$d ml</string>
     <string name="home_goal_line">目标 %1$d ml\n完成 %2$d%%</string>
@@ -224,6 +230,8 @@
     <string name="calendar_next_month">下个月</string>
 
     <string name="medal_filter_all">全部</string>
+    <string name="medal_filter_unlocked">已获得</string>
+    <string name="medal_empty_unlocked">还没有点亮的徽章，继续喝水就能解锁</string>
     <string name="medal_section_catalog">徽章墙</string>
     <string name="medal_best_streak">最长连续</string>
     <string name="medal_total_volume_title">累计补水</string>

@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -388,7 +388,7 @@ fun AquaLinearProgress(
     ) {
         Box(
             Modifier
-                .fillMaxSize()
+                .fillMaxHeight()
                 .fillMaxWidth(ratio.coerceIn(0f, 1f))
                 .clip(RoundedCornerShape(50))
                 .background(color),

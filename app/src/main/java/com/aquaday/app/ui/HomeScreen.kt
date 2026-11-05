@@ -1,8 +1,16 @@
 package com.aquaday.app.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocalDrink
@@ -23,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,6 +84,11 @@ fun HomeScreen(
         label = "home-ring",
     )
     var pendingDelete by remember { mutableStateOf<DrinkEvent?>(null) }
+    // 冷启动时今日已达标也要看到打勾动画，所以初始为 false 等圆环走满后再弹出。
+    val checkState = remember { MutableTransitionState(false) }
+    LaunchedEffect(today.reached, animatedRatio) {
+        checkState.targetState = today.reached && animatedRatio >= 0.995f
+    }
 
     AquaCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -81,7 +96,26 @@ fun HomeScreen(
                 ratio = animatedRatio,
                 modifier = Modifier.size(120.dp),
                 strokeWidth = 11f,
-            )
+            ) {
+                AnimatedVisibility(
+                    visibleState = checkState,
+                    enter = fadeIn(tween(160)) + scaleIn(
+                        initialScale = 0.2f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMediumLow,
+                        ),
+                    ),
+                    exit = fadeOut(tween(120)) + scaleOut(targetScale = 0.2f, animationSpec = tween(120)),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = stringResource(R.string.home_reached_flag),
+                        modifier = Modifier.size(42.dp),
+                        tint = CouiTheme.colorScheme.accent,
+                    )
+                }
+            }
             Spacer(Modifier.width(20.dp))
             Column(Modifier.weight(1f)) {
                 Text(

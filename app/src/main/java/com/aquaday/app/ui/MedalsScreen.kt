@@ -64,8 +64,16 @@ fun MedalsScreen(
     val metrics = state.metrics ?: return
     val all = state.achievements
     val unlockedCount = all.count { it.unlocked }
-    val tabs = listOf(stringResource(R.string.medal_filter_all)) + Achievements.categories
-    val visible = if (filter == 0) all else all.filter { it.achievement.category == tabs[filter] }
+    // 前两枚是「全部」「已获得」，之后才是饮品分类。
+    val tabs = listOf(
+        stringResource(R.string.medal_filter_all),
+        stringResource(R.string.medal_filter_unlocked),
+    ) + Achievements.categories
+    val visible = when (filter) {
+        0 -> all
+        1 -> all.filter { it.unlocked }
+        else -> all.filter { it.achievement.category == Achievements.categories[filter - 2] }
+    }
 
     AquaCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -120,6 +128,13 @@ fun MedalsScreen(
     }
     Spacer(Modifier.height(8.dp))
     AquaCard {
+        if (visible.isEmpty()) {
+            Text(
+                text = stringResource(R.string.medal_empty_unlocked),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         visible.forEachIndexed { index, progress ->
             MedalRow(
                 progress = progress,

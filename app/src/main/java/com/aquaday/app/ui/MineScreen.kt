@@ -38,7 +38,9 @@ import com.aquaday.app.R
 import com.aquaday.app.data.ColorStyle
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaCard
+import com.aquaday.app.ui.components.AquaCardHorizontalPadding
 import com.aquaday.app.ui.components.AquaCardShape
+import com.aquaday.app.ui.components.AquaCardVerticalPadding
 import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
@@ -79,7 +81,7 @@ fun MineScreen(
                 .fillMaxWidth()
                 .clip(AquaCardShape)
                 .clickable(onClick = onOpenProfile)
-                .padding(16.dp),
+                .padding(horizontal = AquaCardHorizontalPadding, vertical = AquaCardVerticalPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AquaAvatar(

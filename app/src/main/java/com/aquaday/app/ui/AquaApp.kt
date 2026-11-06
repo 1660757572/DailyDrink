@@ -9,6 +9,8 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -35,6 +37,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.rememberScrollState
@@ -75,13 +78,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -369,10 +375,16 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
             }
 
             if (!inSubpage) {
+                val fabVisible = page == AquaPage.Home
+                val barShift by animateFloatAsState(
+                    targetValue = if (fabVisible) 1f else 0f,
+                    animationSpec = spring(dampingRatio = 0.65f, stiffness = 130f),
+                    label = "bottomBarShift",
+                )
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && floatingBar != null) {
                         CouiBottomBar(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().shiftFloatBar(barShift),
                             backdrop = backdrop,
                             renderer = floatingBar.bottom,
                             items = items,
@@ -380,11 +392,10 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                             rightIcon = Icons.Filled.Add,
                             rightDescription = stringResource(R.string.action_add),
                             // 隐藏时仍传入附件参数，CouiFabExpansion 才能播出退场动画。
-                            rightVisible = page == AquaPage.Home,
+                            rightVisible = fabVisible,
                             onRightClick = { addOpen = true },
-                            // 附件的 + 号颜色由 COUI 固定（深色白、浅色黑）。黑白主题的强调色接近纯白/纯黑，
-                            // 直接用作底色会让图标消失，这里换成与底栏同调的反色中性色。
-                            rightContainerColor = fabContainerColor(dark, CouiTheme.colorScheme.accent),
+                            // 附件图标由 COUI 固定为白色，底色沿用强调色，只有接近纯白时才回退。
+                            rightContainerColor = fabContainerColor(CouiTheme.colorScheme.accent),
                             // 白色焦散在浅色页面上会糊出一圈方块光晕；rgb 保留给边缘高光，alpha 置零关掉焦散。
                             lightColor = Color.White.copy(alpha = 0f),
                             themeTint = MaterialTheme.colorScheme.background,
@@ -651,9 +662,42 @@ private fun ThemeMode.label(): String = stringResource(
     },
 )
 
-/** 只在强调色与固定图标颜色撞色时回退到中性色，其余配色保持 COUI 默认。 */
-private fun fabContainerColor(dark: Boolean, accent: Color): Color = when {
-    dark && accent.luminance() > 0.6f -> Color(0xFF1C1C1E)
-    !dark && accent.luminance() < 0.3f -> Color(0xFFF2F2F7)
-    else -> accent
+/** 底栏胶囊的加宽量：无附件时对称加宽，首页出现 + 号时再向左生长。 */
+private val BottomBarBaseExtra = 24.dp
+private val BottomBarMaxExtra = 67.dp
+
+/**
+ * COUI 底栏把胶囊宽度写死成「可用宽度 - 136dp」，四项在手机上偏挤。
+ * 这里放宽测量宽度：多出的宽度全部给胶囊，附件槽位所在的两端被裁到屏幕外。
+ * 无附件时对称放置保持居中；有附件时整体左移，+ 号仍停在右侧原位。
+ */
+private fun Modifier.shiftFloatBar(progress: Float): Modifier = layout { measurable, constraints ->
+    val base = BottomBarBaseExtra.roundToPx()
+    val extra = base + ((BottomBarMaxExtra - BottomBarBaseExtra) * progress).roundToPx()
+    val width = constraints.maxWidth + extra
+    val placeable = measurable.measure(
+        Constraints(
+            minWidth = width,
+            maxWidth = width,
+            minHeight = constraints.minHeight,
+            maxHeight = constraints.maxHeight,
+        ),
+    )
+    val offset = -extra / 2f * (1f + progress)
+    layout(constraints.maxWidth, placeable.height) {
+        placeable.place(offset.roundToInt(), 0)
+    }
+}
+
+/**
+ * COUI 右侧附件图标固定为白色，底色必须够深。过亮的强调色压暗后保留色相，
+ * 只有接近纯白（黑白主题深色档）才退回中性深色。
+ */
+private fun fabContainerColor(accent: Color): Color {
+    val luminance = accent.luminance()
+    return when {
+        luminance > 0.72f -> Color(0xFF2C2C2E)
+        luminance > 0.42f -> lerp(accent, Color.Black, 0.45f)
+        else -> accent
+    }
 }

@@ -32,10 +32,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -75,14 +75,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -92,6 +90,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aquaday.app.R
 import com.aquaday.app.data.Achievements
 import com.aquaday.app.data.ColorStyle
+import com.aquaday.app.data.DEFAULT_BLUR_DP
 import com.aquaday.app.data.DEFAULT_SCRIM
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.data.ThemeMode
@@ -110,18 +109,6 @@ import com.itos.coui.topappbar.CouiTopAppBarButton
 private class ShellRenderers {
     val bottom = CouiFloatingRenderer()
 }
-
-/**
- * CouiBottomBar 内置的加号在深色下固定为白色、浅色下固定为黑色，
- * 遇到黑白这类浅强调色时会和按钮底色糊在一起；图标置空后由壳层按 onPrimary 自绘。
- */
-private val EmptyIcon: ImageVector = ImageVector.Builder(
-    name = "aqua-empty",
-    defaultWidth = 24.dp,
-    defaultHeight = 24.dp,
-    viewportWidth = 24f,
-    viewportHeight = 24f,
-).build()
 
 private enum class AquaPage(val titleRes: Int) {
     Home(R.string.tab_home),
@@ -204,7 +191,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
     val shellSnapshot = state.metrics?.snapshot
     val backgroundImage = shellSnapshot?.backgroundImage
     val backgroundScrim = shellSnapshot?.backgroundScrim ?: DEFAULT_SCRIM
-    val backgroundBlur = shellSnapshot?.backgroundBlur ?: 0f
+    val backgroundBlur = shellSnapshot?.backgroundBlur ?: DEFAULT_BLUR_DP
     var backProgress by remember { mutableFloatStateOf(0f) }
     PredictiveBackHandler(enabled = inSubpage) { progress ->
         try {
@@ -351,9 +338,14 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                 )
                                 AquaSubpage.Reminder -> ReminderSettingsScreen(state, viewModel)
                                 AquaSubpage.Permission -> PermissionSettingsScreen(state, viewModel)
-                                AquaSubpage.Appearance -> AppearanceScreen(state, viewModel)
+                                AquaSubpage.Appearance -> AppearanceScreen(
+                                    state,
+                                    viewModel,
+                                    backdrop = pageBackdrop,
+                                    dark = dark,
+                                )
                                 AquaSubpage.Profile -> ProfileScreen(state, viewModel)
-                                AquaSubpage.About -> AboutScreen()
+                                AquaSubpage.About -> AboutScreen(backdrop = pageBackdrop, dark = dark)
                                 else -> MedalDetailScreen(
                                     medalItems,
                                     medalStart,
@@ -380,38 +372,25 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && floatingBar != null) {
                         CouiBottomBar(
-                            modifier = Modifier.fillMaxWidth().widenFloatBar(),
+                            modifier = Modifier.fillMaxWidth(),
                             backdrop = backdrop,
                             renderer = floatingBar.bottom,
                             items = items,
                             selectedIndex = AquaPage.entries.indexOf(page),
-                            rightIcon = EmptyIcon,
+                            rightIcon = Icons.Filled.Add,
                             rightDescription = stringResource(R.string.action_add),
-                            rightVisible = true,
+                            // 隐藏时仍传入附件参数，CouiFabExpansion 才能播出退场动画。
+                            rightVisible = page == AquaPage.Home,
                             onRightClick = { addOpen = true },
-                            rightContainerColor = CouiTheme.colorScheme.accent,
+                            // 附件的 + 号颜色由 COUI 固定（深色白、浅色黑）。黑白主题的强调色接近纯白/纯黑，
+                            // 直接用作底色会让图标消失，这里换成与底栏同调的反色中性色。
+                            rightContainerColor = fabContainerColor(dark, CouiTheme.colorScheme.accent),
                             // 白色焦散在浅色页面上会糊出一圈方块光晕；rgb 保留给边缘高光，alpha 置零关掉焦散。
                             lightColor = Color.White.copy(alpha = 0f),
                             themeTint = MaterialTheme.colorScheme.background,
                             dark = dark,
                             onSelection = { pageIndex = it.coerceIn(0, AquaPage.entries.lastIndex) },
                         )
-                        // FAB 与底栏同尺寸同位：16dp 右边距，下沿正好压在导航栏上沿。
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .windowInsetsPadding(WindowInsets.navigationBars)
-                                .padding(end = 16.dp)
-                                .size(56.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(24.dp),
-                            )
-                        }
                     } else {
                         PlainTabBar(items, AquaPage.entries.indexOf(page)) { pageIndex = it }
                     }
@@ -632,28 +611,6 @@ private fun AquaTopBarContent(
     }
 }
 
-/**
- * CouiBottomBar 把胶囊宽度写死成「可用宽度 - 136dp」（为左右附件各留 56dp），
- * 手机上四项摊下来每项只剩六十来 dp。这里整体加宽并向左放置：
- * 多出来的宽度全给胶囊，FAB 与胶囊右端位置不变，左附件槽位本来为空，被裁掉也看不出。
- * 其中 48dp 用来拉长胶囊，另外 19dp 把胶囊左缘推到与 FAB 右缘相同的屏幕边距。
- */
-private fun Modifier.widenFloatBar(): Modifier = layout { measurable, constraints ->
-    val extra = 67.dp.roundToPx()
-    val width = constraints.maxWidth + extra
-    val placeable = measurable.measure(
-        Constraints(
-            minWidth = width,
-            maxWidth = width,
-            minHeight = constraints.minHeight,
-            maxHeight = constraints.maxHeight,
-        ),
-    )
-    layout(constraints.maxWidth, placeable.height) {
-        placeable.place(-extra, 0)
-    }
-}
-
 /** API 31–33 没有浮动材质，退回同色的普通底栏。 */
 @Composable
 private fun PlainTabBar(items: List<CouiNavigationItem>, selectedIndex: Int, onSelect: (Int) -> Unit) {
@@ -693,3 +650,10 @@ private fun ThemeMode.label(): String = stringResource(
         ThemeMode.Dark -> R.string.setting_theme_dark
     },
 )
+
+/** 只在强调色与固定图标颜色撞色时回退到中性色，其余配色保持 COUI 默认。 */
+private fun fabContainerColor(dark: Boolean, accent: Color): Color = when {
+    dark && accent.luminance() > 0.6f -> Color(0xFF1C1C1E)
+    !dark && accent.luminance() < 0.3f -> Color(0xFFF2F2F7)
+    else -> accent
+}

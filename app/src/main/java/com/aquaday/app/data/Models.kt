@@ -38,7 +38,8 @@ data class DrinkEvent(
 
 enum class ThemeMode { System, Light, Dark }
 
-const val DEFAULT_SCRIM = 0.55f
+const val DEFAULT_SCRIM = 0.40f
+const val DEFAULT_BLUR_DP = 3f
 const val MAX_BLUR_DP = 30f
 const val MIN_CONTAINER_OPACITY = 0.4f
 
@@ -104,7 +105,7 @@ data class AquaSnapshot(
     val backgroundImage: String? = null,
     /** 背景图上方遮罩的不透明度（0..1）与高斯模糊半径（dp）。 */
     val backgroundScrim: Float = DEFAULT_SCRIM,
-    val backgroundBlur: Float = 0f,
+    val backgroundBlur: Float = DEFAULT_BLUR_DP,
     /** 卡片等容器背景的不透明度（0..1），低于 1 时透出页面背景。 */
     val containerOpacity: Float = 1f,
     val onboarded: Boolean = false,

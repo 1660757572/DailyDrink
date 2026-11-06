@@ -1,6 +1,7 @@
 package com.aquaday.app.data
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import com.aquaday.app.reminder.AquaNotifier
@@ -100,6 +101,23 @@ class HydrationRepository(private val context: Context) {
         previous = store.snapshot.first().avatarImage,
         write = store::setAvatarImage,
     )
+
+    /** 裁剪结果直接编码成 PNG 落盘，省去再经过一次 content:// 读取。 */
+    suspend fun setAvatarBitmap(bitmap: Bitmap) = withContext(Dispatchers.IO) {
+        val previous = store.snapshot.first().avatarImage
+        val target = File(context.filesDir, "avatar_${System.currentTimeMillis()}.img")
+        val saved = runCatching {
+            target.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            target.length() > 0
+        }.getOrDefault(false)
+        if (saved) {
+            store.setAvatarImage(target.absolutePath)
+            previous?.let { older -> if (older != target.absolutePath) File(older).delete() }
+        } else {
+            target.delete()
+            Log.w(TAG, "setAvatarBitmap: 头像写入失败")
+        }
+    }
 
     private suspend fun swapImage(
         uri: Uri?,

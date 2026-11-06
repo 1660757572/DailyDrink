@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
+import com.aquaday.app.ui.aquaPrimaryActionColors
 import com.itos.coui.dialog.CouiAlertDialog
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
@@ -48,7 +49,7 @@ fun AquaTimePickerDialog(
             text = stringResource(R.string.action_confirm),
             onClick = { onConfirm((state.hour * 60 + state.minute).coerceIn(0, maxMinutes)) },
             style = CouiDialogActionStyle.Primary,
-            colors = CouiDialogDefaults.primaryActionColors(accent),
+            colors = aquaPrimaryActionColors(accent),
         ),
         dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = onDismiss),
         content = {

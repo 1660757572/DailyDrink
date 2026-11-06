@@ -88,7 +88,7 @@ class HydrationStore(context: Context) {
                 customAccent = prefs[AquaKeys.CUSTOM_ACCENT],
                 backgroundImage = prefs[AquaKeys.BACKGROUND_IMAGE]?.takeIf { it.isNotBlank() },
                 backgroundScrim = (prefs[AquaKeys.BACKGROUND_SCRIM] ?: (DEFAULT_SCRIM * 100).toInt()) / 100f,
-                backgroundBlur = (prefs[AquaKeys.BACKGROUND_BLUR] ?: 0).toFloat(),
+                backgroundBlur = (prefs[AquaKeys.BACKGROUND_BLUR] ?: DEFAULT_BLUR_DP.toInt()).toFloat(),
                 containerOpacity = (prefs[AquaKeys.CONTAINER_OPACITY] ?: 100) / 100f,
                 onboarded = (prefs[AquaKeys.ONBOARDED] ?: 0) == 1,
                 nickname = prefs[AquaKeys.NICKNAME].orEmpty(),

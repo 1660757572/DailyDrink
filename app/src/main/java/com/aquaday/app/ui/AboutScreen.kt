@@ -1,6 +1,8 @@
 package com.aquaday.app.ui
 
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,14 +14,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Alarm
@@ -30,13 +29,10 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SystemUpdate
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -56,13 +52,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.aquaday.app.BuildConfig
 import com.aquaday.app.R
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
+import com.itos.coui.backdrop.CouiBackdrop
+import com.itos.coui.dialog.CouiAlertDialog
+import com.itos.coui.dialog.CouiDialogAction
+import com.itos.coui.dialog.CouiDialogActionStyle
+import com.itos.coui.dialog.CouiDialogDefaults
+import com.itos.coui.dialog.CouiDialogPlacement
+import com.itos.coui.effect.CouiFloatingRenderer
+import com.itos.coui.floatingactionbutton.CouiFab
 import com.itos.coui.theme.CouiTheme
 
 private const val REPO_URL = "https://github.com/1660757572/DailyDrink"
@@ -71,14 +74,14 @@ private const val ISSUE_URL = "$REPO_URL/issues"
 private enum class AboutDoc { License, ThirdParty }
 
 @Composable
-fun AboutScreen() {
+fun AboutScreen(backdrop: CouiBackdrop, dark: Boolean) {
     val uriHandler = LocalUriHandler.current
     var doc by remember { mutableStateOf<AboutDoc?>(null) }
     val versionName = BuildConfig.VERSION_NAME
     val versionCode = BuildConfig.VERSION_CODE
 
     Column(Modifier.fillMaxWidth()) {
-        Hero(versionName)
+        Hero(versionName, backdrop, dark)
         Spacer(Modifier.height(24.dp))
 
         AquaSectionTitle(stringResource(R.string.about_section_help))
@@ -171,13 +174,6 @@ fun AboutScreen() {
                 onClick = { doc = AboutDoc.ThirdParty },
                 trailing = { AboutChevron() },
             )
-            AquaDivider()
-            AquaRow(
-                title = stringResource(R.string.about_developer),
-                summary = stringResource(R.string.about_developer_name),
-                icon = Icons.Filled.Person,
-                iconTint = TintProfile,
-            )
         }
 
         Spacer(Modifier.height(20.dp))
@@ -204,7 +200,7 @@ fun AboutScreen() {
 }
 
 @Composable
-private fun Hero(versionName: String) {
+private fun Hero(versionName: String, backdrop: CouiBackdrop, dark: Boolean) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     Column(
@@ -255,13 +251,13 @@ private fun Hero(versionName: String) {
         )
         Spacer(Modifier.height(18.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            CircleAction(Icons.Filled.Code, stringResource(R.string.about_open_repo)) {
+            CircleAction(Icons.Filled.Code, stringResource(R.string.about_open_repo), backdrop, dark) {
                 uriHandler.openUri(REPO_URL)
             }
-            CircleAction(Icons.Filled.BugReport, stringResource(R.string.about_feedback)) {
+            CircleAction(Icons.Filled.BugReport, stringResource(R.string.about_feedback), backdrop, dark) {
                 uriHandler.openUri(ISSUE_URL)
             }
-            CircleAction(Icons.Filled.Share, stringResource(R.string.about_share)) {
+            CircleAction(Icons.Filled.Share, stringResource(R.string.about_share), backdrop, dark) {
                 context.startActivity(
                     Intent.createChooser(
                         Intent(Intent.ACTION_SEND).apply {
@@ -277,16 +273,50 @@ private fun Hero(versionName: String) {
 }
 
 @Composable
-private fun CircleAction(icon: ImageVector, description: String, onClick: () -> Unit) {
-    Box(
-        Modifier
-            .size(46.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+private fun CircleAction(
+    icon: ImageVector,
+    description: String,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+    onClick: () -> Unit,
+) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        CouiCircleAction(icon, description, backdrop, dark, onClick)
+    } else {
+        Box(
+            Modifier
+                .size(46.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f))
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, description, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@RequiresApi(34)
+@Composable
+private fun CouiCircleAction(
+    icon: ImageVector,
+    description: String,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+    onClick: () -> Unit,
+) {
+    CouiFab(
+        backdrop = backdrop,
+        renderer = remember { CouiFloatingRenderer.standalone() },
+        onClick = onClick,
+        dark = dark,
     ) {
-        Icon(icon, description, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Icon(
+            imageVector = icon,
+            contentDescription = description,
+            modifier = Modifier.size(22.dp),
+            tint = CouiTheme.colorSchemeFor(dark).onAccent,
+        )
     }
 }
 
@@ -330,37 +360,16 @@ private fun AboutChevron() {
 
 @Composable
 private fun DocDialog(title: String, body: String, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 3.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 22.dp)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(Modifier.height(14.dp))
-                Text(
-                    text = body,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .heightIn(max = 380.dp)
-                        .verticalScroll(rememberScrollState()),
-                )
-                Spacer(Modifier.height(18.dp))
-                Button(
-                    onClick = onDismiss,
-                    shape = CircleShape,
-                    modifier = Modifier.fillMaxWidth().height(46.dp),
-                ) {
-                    Text(stringResource(R.string.action_confirm))
-                }
-            }
-        }
-    }
+    CouiAlertDialog(
+        onDismissRequest = onDismiss,
+        title = title,
+        message = body,
+        confirmAction = CouiDialogAction(
+            text = stringResource(R.string.action_confirm),
+            onClick = onDismiss,
+            style = CouiDialogActionStyle.Primary,
+            colors = aquaPrimaryActionColors(CouiTheme.colorScheme.accent),
+        ),
+        placement = CouiDialogPlacement.Center,
+    )
 }

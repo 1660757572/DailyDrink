@@ -1,5 +1,6 @@
 package com.aquaday.app.ui
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -69,6 +70,7 @@ import com.aquaday.app.ui.components.AquaLongButton
 import com.aquaday.app.ui.components.AquaSliderRow
 import com.aquaday.app.ui.components.AquaStepperRow
 import com.aquaday.app.ui.components.AquaSwitchRow
+import com.aquaday.app.ui.components.AvatarCropDialog
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.slider.CouiSlider
@@ -90,8 +92,19 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
     var startHour by remember { mutableIntStateOf(settings.activeStartHour) }
     var endHour by remember { mutableIntStateOf(settings.activeEndHour) }
     val backdrop = rememberCouiBackdrop()
+    var pendingAvatar by remember { mutableStateOf<Uri?>(null) }
     val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) viewModel.setAvatarImage(uri)
+        pendingAvatar = uri
+    }
+    pendingAvatar?.let { uri ->
+        AvatarCropDialog(
+            uri = uri,
+            onDismiss = { pendingAvatar = null },
+            onCropped = { bitmap ->
+                pendingAvatar = null
+                viewModel.setAvatarBitmap(bitmap)
+            },
+        )
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshPermissions() }

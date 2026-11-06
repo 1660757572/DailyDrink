@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
+import com.aquaday.app.ui.aquaPrimaryActionColors
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.ui.asClock
 import com.itos.coui.dialog.CouiAlertDialog
@@ -84,7 +85,7 @@ fun AquaAddSheet(
             text = stringResource(R.string.dialog_add_submit, rounded),
             onClick = { onConfirm(rounded, type, LocalDateTime.of(now.toLocalDate(), time)) },
             style = CouiDialogActionStyle.Primary,
-            colors = CouiDialogDefaults.primaryActionColors(accent),
+            colors = aquaPrimaryActionColors(accent),
         ),
         dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = onDismiss),
         content = {
@@ -190,7 +191,7 @@ fun AquaAddSheet(
                     onCreateType(trimmed)
                 },
                 style = CouiDialogActionStyle.Primary,
-                colors = CouiDialogDefaults.primaryActionColors(accent),
+                colors = aquaPrimaryActionColors(accent),
             ),
             dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = { typeDialog = false }),
             clearContentDescription = stringResource(R.string.dialog_clear_input),

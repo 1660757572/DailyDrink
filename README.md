@@ -44,8 +44,9 @@
 ### 个性化
 - 深色 / 浅色 / 跟随系统，深色为纯黑、浅色为 #F0F1F3 纯色底
 - Material You 动态取色，从系统壁纸提取主色调
-- 支持选择本地图片作为页面背景（图片保存在应用私有目录，并叠加遮罩保证文字可读）
-- 首启引导：欢迎、每日目标、提醒、权限四步完成初始化
+- 支持选择本地图片作为页面背景（图片保存在应用私有目录），遮罩不透明度、高斯模糊与容器不透明度均可调节，一键恢复默认
+- 头像从系统相册选择后可拖动、缩放裁剪，昵称与头像显示在「我的」页面
+- 首启引导：欢迎、个人信息、每日目标、提醒、权限五步完成初始化
 
 ## 技术栈
 
@@ -54,43 +55,9 @@
 | 语言 | Kotlin 2.4 |
 | UI | Jetpack Compose（BOM 2026.08.01）+ Material 3 |
 | 设计体系 | COUI-Kit 0.0.1-alpha4（ColorOS 17 液态玻璃组件，`io.github.itoseo:coui`） |
-| 构建 | AGP 9.4.1 / Gradle 9.8.2 / JDK 17 |
 | 存储 | DataStore Preferences（全部数据仅存本机） |
 | 提醒 | AlarmManager + WorkManager + 通知渠道 |
 | SDK | minSdk 31 · targetSdk 37 · compileSdk 37 |
-
-## 构建
-
-环境要求：JDK 17、Android SDK 37。
-
-```bash
-# Debug
-./gradlew :app:assembleDebug
-# 产物：app/build/outputs/apk/debug/app-debug.apk
-
-# Release
-./gradlew :app:assembleRelease
-# 产物：app/build/outputs/apk/release/app-release.apk
-```
-
-直接安装到设备：
-
-```bash
-adb install -r app/build/outputs/apk/release/app-release.apk
-```
-
-### 发布签名
-
-仓库不包含签名材料。在项目根目录创建 `keystore.properties` 后，Release 构建会自动签名：
-
-```properties
-storeFile=keystore/aquaday-release.jks
-storePassword=你的密码
-keyAlias=aquaday
-keyPassword=你的密码
-```
-
-`keystore.properties`、`keystore/` 与 `*.jks` 已在 `.gitignore` 中排除，请自行备份密钥；文件缺失时 Release 构建为未签名包。Debug 包与 Release 包签名不同，互相覆盖安装需先卸载。
 
 ## 权限说明
 

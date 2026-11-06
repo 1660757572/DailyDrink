@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import com.aquaday.app.data.ColorStyle
 import com.aquaday.app.data.DEFAULT_SCRIM
 import com.aquaday.app.data.ThemeMode
+import com.itos.coui.dialog.CouiDialogActionColors
+import com.itos.coui.dialog.CouiDialogDefaults
 import com.itos.coui.shape.CouiShape
 import com.itos.coui.theme.CouiColorScheme
 import com.itos.coui.theme.CouiTheme
@@ -136,6 +138,13 @@ private fun readableAccent(color: Color, dark: Boolean): Color {
 
 /** 卡片等容器背景的不透明度；由外观设置统一驱动，避免每处容器单独传参。 */
 val LocalAquaContainerAlpha = staticCompositionLocalOf { 1f }
+
+/** COUI 主按钮默认给白字；黑白主题的强调色接近纯白时按底色亮度反色，避免文字消失。 */
+@Composable
+fun aquaPrimaryActionColors(surface: Color): CouiDialogActionColors {
+    val content = if (surface.luminance() > 0.5f) Color.Black else Color.White
+    return CouiDialogDefaults.primaryActionColors(surface).copy(content = content)
+}
 
 /** COUI 组件在消费处读取 CouiColorScheme，accent 必须与 M3 primary 保持一致。 */
 private fun couiScheme(dark: Boolean, colors: ColorScheme): CouiColorScheme = CouiColorScheme(

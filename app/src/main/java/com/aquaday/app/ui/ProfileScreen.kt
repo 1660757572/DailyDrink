@@ -1,5 +1,6 @@
 package com.aquaday.app.ui
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,6 +34,7 @@ import com.aquaday.app.R
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaChip
 import com.aquaday.app.ui.components.AquaSectionTitle
+import com.aquaday.app.ui.components.AvatarCropDialog
 
 internal const val NICKNAME_MAX = 24
 
@@ -40,8 +43,20 @@ internal const val NICKNAME_MAX = 24
 fun ProfileScreen(state: AquaUiState, viewModel: AquaViewModel) {
     val snapshot = state.metrics?.snapshot ?: return
     var nicknameDraft by rememberSaveable { mutableStateOf(snapshot.nickname) }
+    var pendingAvatar by remember { mutableStateOf<Uri?>(null) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) viewModel.setAvatarImage(uri)
+        pendingAvatar = uri
+    }
+
+    pendingAvatar?.let { uri ->
+        AvatarCropDialog(
+            uri = uri,
+            onDismiss = { pendingAvatar = null },
+            onCropped = { bitmap ->
+                pendingAvatar = null
+                viewModel.setAvatarBitmap(bitmap)
+            },
+        )
     }
 
     AquaSectionTitle(stringResource(R.string.profile_avatar_section))

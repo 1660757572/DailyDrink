@@ -108,6 +108,10 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setAvatarImage(uri: android.net.Uri?) = viewModelScope.launch { repository.setAvatarImage(uri) }
 
+    fun setAvatarBitmap(bitmap: android.graphics.Bitmap) = viewModelScope.launch {
+        repository.setAvatarBitmap(bitmap)
+    }
+
     fun setNickname(nickname: String) = viewModelScope.launch { repository.setNickname(nickname) }
 
     fun completeOnboarding() = viewModelScope.launch { repository.completeOnboarding() }

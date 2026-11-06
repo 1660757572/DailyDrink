@@ -1,8 +1,10 @@
 package com.aquaday.app.ui
 
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +27,8 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
@@ -46,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -53,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.aquaday.app.R
 import com.aquaday.app.data.ColorStyle
+import com.aquaday.app.data.DEFAULT_BLUR_DP
+import com.aquaday.app.data.DEFAULT_SCRIM
 import com.aquaday.app.data.MAX_BLUR_DP
 import com.aquaday.app.data.MIN_CONTAINER_OPACITY
 import com.aquaday.app.data.ThemeMode
@@ -64,6 +71,8 @@ import com.aquaday.app.ui.components.AquaSectionTitle
 import com.aquaday.app.ui.components.AquaSegmented
 import com.aquaday.app.ui.components.AquaSliderRow
 import com.aquaday.app.ui.components.AquaTileShape
+import com.itos.coui.backdrop.CouiBackdrop
+import com.itos.coui.chip.CouiChipTab
 import com.itos.coui.dialog.CouiAlertDialog
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
@@ -74,7 +83,12 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
-fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
+fun AppearanceScreen(
+    state: AquaUiState,
+    viewModel: AquaViewModel,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+) {
     val snapshot = state.metrics?.snapshot ?: return
     val imagePath = snapshot.backgroundImage
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -184,19 +198,24 @@ fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
             BackgroundPreview(imagePath, snapshot.backgroundScrim, snapshot.backgroundBlur)
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AquaChip(
-                    text = stringResource(R.string.action_choose_image),
+                CouiChipAction(
+                    label = stringResource(R.string.action_choose_image),
+                    icon = Icons.Filled.Wallpaper,
                     selected = true,
+                    backdrop = backdrop,
+                    dark = dark,
                     onClick = {
                         picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     },
-                    leading = Icons.Filled.Wallpaper,
                     modifier = Modifier.weight(1f),
                 )
-                AquaChip(
-                    text = stringResource(R.string.action_remove_image),
+                CouiChipAction(
+                    label = stringResource(R.string.action_remove_image),
+                    icon = Icons.Filled.Delete,
                     selected = false,
                     enabled = imagePath != null,
+                    backdrop = backdrop,
+                    dark = dark,
                     onClick = { viewModel.setBackgroundImage(null) },
                     modifier = Modifier.weight(1f),
                 )
@@ -230,6 +249,21 @@ fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
                     steps = 29,
                     valueText = "${blurDraft.roundToInt()} dp",
                     summary = stringResource(R.string.setting_background_blur_summary),
+                )
+                Spacer(Modifier.height(8.dp))
+                CouiChipAction(
+                    label = stringResource(R.string.action_reset_background),
+                    icon = Icons.Filled.RestartAlt,
+                    selected = false,
+                    backdrop = backdrop,
+                    dark = dark,
+                    onClick = {
+                        scrimDraft = DEFAULT_SCRIM * 100f
+                        blurDraft = DEFAULT_BLUR_DP
+                        viewModel.setBackgroundScrim(scrimDraft.roundToInt())
+                        viewModel.setBackgroundBlur(blurDraft.roundToInt())
+                    },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
@@ -271,6 +305,56 @@ fun AppearanceScreen(state: AquaUiState, viewModel: AquaViewModel) {
             },
         )
     }
+}
+
+/** 图片操作用 COUI 分类胶囊；低版本没有浮动材质，退回同形状的普通胶囊。 */
+@Composable
+private fun CouiChipAction(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        CouiChipActionImpl(label, icon, selected, backdrop, dark, onClick, modifier, enabled)
+    } else {
+        AquaChip(
+            text = label,
+            selected = selected,
+            onClick = onClick,
+            modifier = modifier,
+            leading = icon,
+            enabled = enabled,
+        )
+    }
+}
+
+@RequiresApi(34)
+@Composable
+private fun CouiChipActionImpl(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    enabled: Boolean,
+) {
+    CouiChipTab(
+        modifier = modifier,
+        selected = selected,
+        onClick = onClick,
+        label = label,
+        backdrop = backdrop,
+        dark = dark,
+        enabled = enabled,
+        icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp)) },
+    )
 }
 
 private data class ColorTemplate(val style: ColorStyle, val color: Color?)
@@ -364,7 +448,7 @@ private fun CustomColorWarningDialog(onDismiss: () -> Unit, onContinue: () -> Un
             text = stringResource(R.string.action_continue),
             onClick = onContinue,
             style = CouiDialogActionStyle.Primary,
-            colors = CouiDialogDefaults.primaryActionColors(MaterialTheme.colorScheme.primary),
+            colors = aquaPrimaryActionColors(MaterialTheme.colorScheme.primary),
         ),
         dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = onDismiss),
     )

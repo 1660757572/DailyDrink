@@ -36,9 +36,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.tappableElement
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -105,13 +102,9 @@ import com.aquaday.app.data.DEFAULT_SCRIM
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaAddSheet
-import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.effect.CouiFloatingRenderer
-import com.itos.coui.effect.LocalCouiContourGlowEnabled
-import com.itos.coui.floatingactionbutton.CouiFabDefaults
-import com.itos.coui.floatingactionbutton.Fab
 import com.itos.coui.navigation.CouiNavigationItem
 import com.itos.coui.navigation.NavigationBar
 import com.itos.coui.scroll.couiVerticalScroll
@@ -422,9 +415,6 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                 val fabVisible = page == AquaPage.Home
                 // 首页把整条底栏向左让位给加号，其他页让胶囊回到正中；弹簧参数取自 COUI 附件展开。
                 val dock by animateFloatAsState(if (fabVisible) 0f else 1f, DockSpring, label = "bottomBarDock")
-                val fabProgress by animateFloatAsState(if (fabVisible) 1f else 0f, DockSpring, label = "addFabScale")
-                val density = LocalDensity.current
-                val tappableBottom = WindowInsets.tappableElement.getBottom(density)
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && floatingBar != null) {
                         NavigationBar(
@@ -433,32 +423,20 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                             renderer = floatingBar.bottom,
                             items = items,
                             selectedIndex = AquaPage.entries.indexOf(page),
+                            // 加号用底栏的右附件：退场由 COUI 的附件收拢驱动。隐藏期间照样传入附件参数，
+                            // 只切 rightVisible，否则附件没有内容可收，退场动画就没了。
+                            rightIcon = Icons.Filled.Add,
+                            rightDescription = stringResource(R.string.action_add),
+                            rightVisible = fabVisible,
+                            onRightClick = { addOpen = true },
+                            // 附件图标固定为白色，底色沿用强调色，只有接近纯白时才回退。
+                            rightContainerColor = fabContainerColor(CouiTheme.colorScheme.accent),
                             // 白色焦散在浅色页面上会糊出一圈方块光晕；rgb 保留给边缘高光，alpha 置零关掉焦散。
                             lightColor = Color.White.copy(alpha = 0f),
                             themeTint = MaterialTheme.colorScheme.background,
                             dark = dark,
                             onSelection = { pageIndex = it.coerceIn(0, AquaPage.entries.lastIndex) },
                         )
-                        // 加号不走底栏附件：附件跟着底栏一起平移，拆出来才能像原厂那样钉在右下角。
-                        // 收拢完成后彻底移出组合：它画在胶囊之上，留着会挡住最后一个导航项的点击。
-                        if (fabVisible || fabProgress > 0f) {
-                            AddFab(
-                                progress = fabProgress,
-                                enabled = fabVisible,
-                                backdrop = backdrop,
-                                dark = dark,
-                                description = stringResource(R.string.action_add),
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .windowInsetsPadding(
-                                        WindowInsets.tappableElement.only(
-                                            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
-                                        ),
-                                    )
-                                    .padding(end = 16.dp, bottom = 16.dp + if (tappableBottom > 0) 0.dp else 8.dp),
-                                onClick = { if (fabVisible) addOpen = true },
-                            )
-                        }
                     } else {
                         PlainTabBar(items, AquaPage.entries.indexOf(page)) { pageIndex = it }
                     }
@@ -687,14 +665,11 @@ private fun ThemeMode.label(): String = stringResource(
     },
 )
 
-/** 底栏让位与加号缩放共用同一条弹簧，节奏与 COUI 附件展开一致。 */
+/** 底栏让位弹簧，节奏与 COUI 附件展开一致。 */
 private val DockSpring = spring<Float>(dampingRatio = 0.65f, stiffness = 130.5f)
 
 /** 底栏为达到胶囊长度上限需要多测出的宽度，正好等于一个导航项的 70dp。 */
 private val BottomBarMeasureExtra = 70.dp
-
-/** 加号退场时向胶囊末端收拢的距离，取自 COUI 附件的 `menu.right - fab.width`。 */
-private val BottomBarFabCollapse = 68.dp
 
 /**
  * COUI 底栏的胶囊长度只由测量宽度决定：测量宽度不足时胶囊会被两侧 56dp 附件位挤短。
@@ -711,55 +686,6 @@ private fun Modifier.dockBar(progress: Float): Modifier = layout { measurable, c
     )
     layout(constraints.maxWidth, placeable.height) {
         placeable.place((-extra + extra / 2 * progress).roundToInt(), 0)
-    }
-}
-
-/**
- * 钉在右下角的加号，退场沿用 COUI 附件的收拢方式：先向左滑进胶囊、缩到一半，
- * 后半程才淡出。它画在胶囊之上，所以完全收拢后要从组合里移除，否则透明的它仍会吃掉导航项的点击。
- */
-@RequiresApi(34)
-@Composable
-private fun AddFab(
-    progress: Float,
-    enabled: Boolean,
-    backdrop: CouiBackdrop,
-    dark: Boolean,
-    description: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    val density = LocalDensity.current
-    val contour = LocalCouiContourGlowEnabled.current
-    // 附件图标由 COUI 固定为白色，底色沿用强调色，只有接近纯白时才回退。
-    val container = fabContainerColor(CouiTheme.colorScheme.accent)
-    val material = remember(container, dark) { CouiFabDefaults.material(container, dark) }
-    val shadow = remember(container, density.density, contour) {
-        CouiFabDefaults.shadow(container, density.density, contour)
-    }
-    val collapsePx = with(density) { BottomBarFabCollapse.toPx() }
-    Fab(
-        modifier = modifier.graphicsLayer {
-            val collapse = 1f - progress
-            scaleX = 1f - 0.5f * collapse
-            scaleY = 1f - 0.5f * collapse
-            translationX = -collapsePx * collapse
-            // 与 CouiFabExpansion 一致：收拢过半之前保持完全不透明，最后一段才溶进胶囊。
-            alpha = if (collapse > 0.5f) 1f - (collapse - 0.5f) / 0.5f else 1f
-        },
-        backdrop = backdrop,
-        renderer = remember { CouiFloatingRenderer.standalone() },
-        onClick = onClick,
-        dark = dark,
-        material = material,
-        shadow = shadow,
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Add,
-            contentDescription = description.takeIf { enabled },
-            modifier = Modifier.size(24.dp),
-            tint = Color.White,
-        )
     }
 }
 

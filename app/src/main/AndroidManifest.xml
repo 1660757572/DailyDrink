@@ -33,6 +33,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".MedalDetailActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:exported="false"
+            android:theme="@style/Theme.AquaDay" />
+
         <receiver
             android:name=".reminder.ReminderActionReceiver"
             android:exported="false" />

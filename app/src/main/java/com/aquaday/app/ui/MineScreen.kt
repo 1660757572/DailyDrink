@@ -1,8 +1,5 @@
 package com.aquaday.app.ui
 
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,7 +48,6 @@ import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
 import com.itos.coui.dialog.Dialog
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MineScreen(
     state: AquaUiState,
@@ -63,8 +59,6 @@ fun MineScreen(
     onOpenAbout: () -> Unit,
     dialogBackdrop: CouiBackdrop,
     dark: Boolean,
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     val metrics = state.metrics ?: return
     val snapshot = metrics.snapshot
@@ -72,11 +66,6 @@ fun MineScreen(
     var goalDraft by remember(snapshot.goalMl) { mutableFloatStateOf(snapshot.goalMl.toFloat()) }
     var cupDraft by remember(settings.defaultCupMl) { mutableFloatStateOf(settings.defaultCupMl.toFloat()) }
     var showReset by remember { mutableStateOf(false) }
-    val profileAvatar = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Profile)
-    val reminderIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Reminder)
-    val permissionIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Permission)
-    val appearanceIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.Appearance)
-    val aboutIcon = sharedIconModifier(sharedTransitionScope, animatedVisibilityScope, AquaSharedKeys.About)
 
     AquaCard(contentPadding = false) {
         Row(
@@ -91,7 +80,6 @@ fun MineScreen(
                 path = snapshot.avatarImage,
                 nickname = snapshot.nickname,
                 size = 52.dp,
-                modifier = profileAvatar,
             )
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
@@ -153,7 +141,6 @@ fun MineScreen(
                 ),
                 icon = Icons.Filled.Alarm,
                 iconTint = TintReminder,
-                iconModifier = reminderIcon,
                 onClick = onOpenReminder,
                 trailing = { Chevron() },
             )
@@ -170,7 +157,6 @@ fun MineScreen(
                 },
                 icon = Icons.Filled.NotificationsActive,
                 iconTint = TintPermission,
-                iconModifier = permissionIcon,
                 onClick = onOpenPermission,
                 trailing = { Chevron() },
             )
@@ -180,7 +166,6 @@ fun MineScreen(
                 summary = appearanceSummary(snapshot.themeMode, snapshot.colorStyle, snapshot.backgroundImage != null),
                 icon = Icons.Filled.DarkMode,
                 iconTint = TintTheme,
-                iconModifier = appearanceIcon,
                 onClick = onOpenAppearance,
                 trailing = { Chevron() },
             )
@@ -211,7 +196,6 @@ fun MineScreen(
                 summary = stringResource(R.string.setting_about_summary),
                 icon = Icons.Filled.Info,
                 iconTint = TintAbout,
-                iconModifier = aboutIcon,
                 onClick = onOpenAbout,
                 trailing = { Chevron() },
             )
@@ -255,16 +239,6 @@ private fun Chevron() {
         contentDescription = null,
         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
     )
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-private fun sharedIconModifier(
-    scope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope,
-    key: String,
-): Modifier = with(scope) {
-    Modifier.sharedElement(rememberSharedContentState(key), animatedVisibilityScope)
 }
 
 @Composable

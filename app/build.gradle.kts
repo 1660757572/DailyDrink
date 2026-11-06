@@ -20,8 +20,8 @@ android {
         applicationId = "com.aquaday.app"
         minSdk = 31
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.7.0"
+        versionCode = 4
+        versionName = "1.8.0"
     }
 
     buildFeatures {
@@ -76,6 +76,9 @@ dependencies {
     // ColorOS 17 视觉组件：悬浮底栏、渐进式模糊顶栏、浮动材质
     implementation(libs.coui)
     implementation(libs.coui.material3)
+
+    // 金标联盟一镜到底无缝动画 KIT：编译期只是 API 壳，动画实现由设备侧 ROM 提供，不支持时走应用内过场。
+    implementation("gsai.sdk:sharedview-kit:1.0.0.5")
 
     debugImplementation(libs.compose.ui.tooling)
 }

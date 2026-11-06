@@ -1,9 +1,6 @@
 package com.aquaday.app.ui
 
 import android.content.Intent
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -48,9 +45,6 @@ import com.aquaday.app.ui.components.bleedHorizontal
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.theme.CouiTheme
 
-/** 徽章在列表与详情之间用同一个键接续，滑动到的那一枚才参与共享。 */
-internal fun medalSharedKey(id: String): String = "aqua-shared-medal-$id"
-
 private const val DetailPanelHeight = 500
 
 /**
@@ -59,15 +53,12 @@ private const val DetailPanelHeight = 500
  * 这里用不参与保存的 PagerState：路由的 SaveableStateHolder 会还原上次滑到的页码，
  * 重新点开另一枚徽章时会落在旧页。
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MedalDetailScreen(
     items: List<AchievementProgress>,
     startIndex: Int,
     backdrop: CouiBackdrop,
     dark: Boolean,
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     if (items.isEmpty()) return
     val start = startIndex.coerceIn(0, items.lastIndex)
@@ -84,8 +75,6 @@ fun MedalDetailScreen(
             progress = progress,
             backdrop = backdrop,
             dark = dark,
-            scope = sharedTransitionScope,
-            animatedVisibilityScope = animatedVisibilityScope,
         )
     }
 
@@ -95,14 +84,11 @@ fun MedalDetailScreen(
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun MedalDetailPage(
     progress: AchievementProgress,
     backdrop: CouiBackdrop,
     dark: Boolean,
-    scope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     val achievement = progress.achievement
     val tier = tierColor(achievement.tier)
@@ -128,12 +114,6 @@ private fun MedalDetailPage(
             icon = achievement.icon,
             tier = tier,
             unlocked = progress.unlocked,
-            modifier = with(scope) {
-                Modifier.sharedElement(
-                    rememberSharedContentState(key = medalSharedKey(achievement.id)),
-                    animatedVisibilityScope = animatedVisibilityScope,
-                )
-            },
         )
         Spacer(Modifier.height(26.dp))
         Text(

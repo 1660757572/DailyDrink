@@ -16,7 +16,7 @@
 | **成就** | **我的** |
 | <img src="docs/screenshots/achievements.png" width="300" alt="成就" /> | <img src="docs/screenshots/mine.png" width="300" alt="我的" /> |
 
-> 外观设置：深/浅色、强调色模板与自定义取色、背景图片、遮罩不透明度 / 高斯模糊 / 容器不透明度调节
+> 界面预览为默认外观（浅色 · 未设置自定义背景）；外观设置可切换深/浅色、强调色模板与自定义取色、背景图片、遮罩不透明度 / 高斯模糊 / 容器不透明度
 
 <img src="docs/screenshots/appearance.png" width="300" alt="外观设置" />
 

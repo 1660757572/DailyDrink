@@ -30,11 +30,12 @@ import com.aquaday.app.R
 import com.aquaday.app.ui.aquaPrimaryActionColors
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.ui.asClock
-import com.itos.coui.dialog.CouiAlertDialog
+import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
-import com.itos.coui.dialog.CouiInputDialog
+import com.itos.coui.dialog.Dialog
+import com.itos.coui.dialog.InputDialog
 import com.itos.coui.theme.CouiTheme
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -51,6 +52,8 @@ fun AquaAddSheet(
     defaultCupMl: Int,
     goalMl: Int,
     types: List<DrinkType>,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
     onDismiss: () -> Unit,
     onCreateType: (String) -> Unit,
     onConfirm: (amountMl: Int, type: DrinkType, at: LocalDateTime) -> Unit,
@@ -77,8 +80,9 @@ fun AquaAddSheet(
         }
     }
 
-    CouiAlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
+        dark = dark,
         title = stringResource(R.string.action_add),
         message = stringResource(R.string.dialog_add_hint, goalMl),
         confirmAction = CouiDialogAction(
@@ -88,7 +92,9 @@ fun AquaAddSheet(
             colors = aquaPrimaryActionColors(accent),
         ),
         dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = onDismiss),
-        content = {
+        material = if (CouiDialogDefaults.isMaterialSupported()) CouiDialogDefaults.material(dark) else null,
+        backdrop = backdrop,
+    ) {
             // COUI 只给标题和正文加 contentPadding，自定义内容需要自己对齐同一 24dp。
             Column(
                 Modifier
@@ -173,15 +179,15 @@ fun AquaAddSheet(
                     },
                 )
             }
-        },
-    )
+        }
 
     if (typeDialog) {
         val trimmed = typeName.text.trim()
-        CouiInputDialog(
+        InputDialog(
             value = typeName,
             onValueChange = { next -> if (next.text.length <= 12) typeName = next },
             onDismissRequest = { typeDialog = false },
+            dark = dark,
             confirmAction = CouiDialogAction(
                 text = stringResource(R.string.action_confirm),
                 enabled = trimmed.isNotEmpty(),
@@ -200,6 +206,8 @@ fun AquaAddSheet(
             placeholder = stringResource(R.string.dialog_new_type_placeholder),
             counter = "${typeName.text.length}/12",
             accent = accent,
+            material = if (CouiDialogDefaults.isMaterialSupported()) CouiDialogDefaults.material(dark) else null,
+            backdrop = backdrop,
         )
     }
 
@@ -207,6 +215,8 @@ fun AquaAddSheet(
         AquaTimePickerDialog(
             initialMinutes = minutes,
             maxMinutes = maxMinutes,
+            backdrop = backdrop,
+            dark = dark,
             onDismiss = { timeDialog = false },
             onConfirm = { picked ->
                 minutes = picked

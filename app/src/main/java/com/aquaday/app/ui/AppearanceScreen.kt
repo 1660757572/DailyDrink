@@ -30,11 +30,8 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Wallpaper
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -55,7 +52,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.aquaday.app.R
 import com.aquaday.app.data.ColorStyle
 import com.aquaday.app.data.DEFAULT_BLUR_DP
@@ -68,16 +64,20 @@ import com.aquaday.app.ui.components.AquaChip
 import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
-import com.aquaday.app.ui.components.AquaSegmented
 import com.aquaday.app.ui.components.AquaSliderRow
 import com.aquaday.app.ui.components.AquaTileShape
 import com.itos.coui.backdrop.CouiBackdrop
-import com.itos.coui.chip.CouiChipTab
-import com.itos.coui.dialog.CouiAlertDialog
+import com.itos.coui.chip.ChipTab
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
-import com.itos.coui.slider.CouiSlider
+import com.itos.coui.dialog.Dialog
+import com.itos.coui.menu.CouiMenuItem
+import com.itos.coui.menu.CouiMenuDefaults
+import com.itos.coui.menu.Menu
+import com.itos.coui.menu.couiMenuAnchor
+import com.itos.coui.menu.rememberCouiMenuAnchor
+import com.itos.coui.slider.Slider
 import com.itos.coui.theme.CouiTheme
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -87,6 +87,7 @@ fun AppearanceScreen(
     state: AquaUiState,
     viewModel: AquaViewModel,
     backdrop: CouiBackdrop,
+    dialogBackdrop: CouiBackdrop,
     dark: Boolean,
 ) {
     val snapshot = state.metrics?.snapshot ?: return
@@ -101,32 +102,44 @@ fun AppearanceScreen(
     var opacityDraft by remember(snapshot.containerOpacity) { mutableFloatStateOf(snapshot.containerOpacity * 100f) }
 
     AquaSectionTitle(stringResource(R.string.appearance_section_mode))
+    val themeAnchor = rememberCouiMenuAnchor()
+    var themeMenuOpen by remember { mutableStateOf(false) }
+    val themeOptions = listOf(
+        ThemeMode.System to stringResource(R.string.setting_theme_system),
+        ThemeMode.Light to stringResource(R.string.setting_theme_light),
+        ThemeMode.Dark to stringResource(R.string.setting_theme_dark),
+    )
     AquaCard {
-        Column {
-            AquaRow(
-                title = stringResource(R.string.setting_theme),
-                summary = stringResource(R.string.mine_appearance_hint),
-                icon = Icons.Filled.DarkMode,
-                iconTint = TintTheme,
-            )
-            Spacer(Modifier.height(6.dp))
-            val modes = listOf(
-                stringResource(R.string.setting_theme_system),
-                stringResource(R.string.setting_theme_light),
-                stringResource(R.string.setting_theme_dark),
-            )
-            AquaSegmented(
-                options = modes,
-                selectedIndex = when (snapshot.themeMode) {
-                    ThemeMode.System -> 0
-                    ThemeMode.Light -> 1
-                    ThemeMode.Dark -> 2
-                },
-                onSelect = { index ->
-                    viewModel.setThemeMode(listOf(ThemeMode.System, ThemeMode.Light, ThemeMode.Dark)[index])
-                },
-            )
-        }
+        AquaRow(
+            modifier = Modifier.couiMenuAnchor(themeAnchor),
+            title = stringResource(R.string.setting_theme),
+            summary = themeOptions.firstOrNull { it.first == snapshot.themeMode }?.second
+                ?: stringResource(R.string.setting_theme_system),
+            icon = Icons.Filled.DarkMode,
+            iconTint = TintTheme,
+            onClick = { themeAnchor.open { themeMenuOpen = true } },
+            trailing = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                )
+            },
+        )
+        Menu(
+            expanded = themeMenuOpen,
+            onDismissRequest = { themeMenuOpen = false },
+            items = themeOptions.map { (mode, label) ->
+                CouiMenuItem(mode, label, selected = mode == snapshot.themeMode)
+            },
+            onItemClick = { item ->
+                viewModel.setThemeMode(item.value)
+                themeMenuOpen = false
+            },
+            style = CouiMenuDefaults.style(dark),
+            anchor = themeAnchor,
+        )
     }
 
     Spacer(Modifier.height(16.dp))
@@ -286,6 +299,8 @@ fun AppearanceScreen(
 
     if (showColorWarning) {
         CustomColorWarningDialog(
+            backdrop = dialogBackdrop,
+            dark = dark,
             onDismiss = { showColorWarning = false },
             onContinue = {
                 showColorWarning = false
@@ -297,6 +312,8 @@ fun AppearanceScreen(
     if (showColorPicker) {
         CustomColorPickerDialog(
             initial = snapshot.customAccent?.let { Color(it) } ?: CouiTheme.colorScheme.accent,
+            backdrop = dialogBackdrop,
+            dark = dark,
             onDismiss = { showColorPicker = false },
             onConfirm = { chosen ->
                 viewModel.setCustomAccent(chosen.toArgb())
@@ -345,7 +362,7 @@ private fun CouiChipActionImpl(
     modifier: Modifier,
     enabled: Boolean,
 ) {
-    CouiChipTab(
+    ChipTab(
         modifier = modifier,
         selected = selected,
         onClick = onClick,
@@ -354,8 +371,7 @@ private fun CouiChipActionImpl(
         dark = dark,
         enabled = enabled,
         icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp)) },
-    )
-}
+    )}
 
 private data class ColorTemplate(val style: ColorStyle, val color: Color?)
 
@@ -437,11 +453,17 @@ internal fun ColorStyle.label(): String = stringResource(
     },
 )
 
-/** CouiAlertDialog 的内容区会吞掉拖动手势，滑块必须放进独立的取色弹窗。 */
+/** 取色弹窗的内容区会吞掉拖动手势，滑块放在独立的 COUI 弹窗里。 */
 @Composable
-private fun CustomColorWarningDialog(onDismiss: () -> Unit, onContinue: () -> Unit) {
-    CouiAlertDialog(
+private fun CustomColorWarningDialog(
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+    onDismiss: () -> Unit,
+    onContinue: () -> Unit,
+) {
+    Dialog(
         onDismissRequest = onDismiss,
+        dark = dark,
         title = stringResource(R.string.color_style_custom),
         message = stringResource(R.string.color_custom_warning),
         confirmAction = CouiDialogAction(
@@ -451,12 +473,16 @@ private fun CustomColorWarningDialog(onDismiss: () -> Unit, onContinue: () -> Un
             colors = aquaPrimaryActionColors(MaterialTheme.colorScheme.primary),
         ),
         dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = onDismiss),
+        material = if (CouiDialogDefaults.isMaterialSupported()) CouiDialogDefaults.material(dark) else null,
+        backdrop = backdrop,
     )
 }
 
 @Composable
 private fun CustomColorPickerDialog(
     initial: Color,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (Color) -> Unit,
 ) {
@@ -467,82 +493,70 @@ private fun CustomColorPickerDialog(
     var saturation by remember(hsv) { mutableFloatStateOf(hsv[1].coerceAtLeast(0.45f)) }
     val picked = Color(android.graphics.Color.HSVToColor(floatArrayOf(hue, saturation, 0.92f)))
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 3.dp,
-            modifier = Modifier.fillMaxWidth(),
+    Dialog(
+        onDismissRequest = onDismiss,
+        dark = dark,
+        title = stringResource(R.string.color_style_custom),
+        confirmAction = CouiDialogAction(
+            text = stringResource(R.string.action_use),
+            onClick = { onConfirm(picked) },
+            style = CouiDialogActionStyle.Primary,
+            colors = aquaPrimaryActionColors(CouiTheme.colorScheme.accent),
+        ),
+        dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = onDismiss),
+        material = if (CouiDialogDefaults.isMaterialSupported()) CouiDialogDefaults.material(dark) else null,
+        backdrop = backdrop,
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CouiDialogDefaults.contentPadding)
+                .padding(bottom = 8.dp),
         ) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 24.dp)) {
-                Text(
-                    text = stringResource(R.string.color_style_custom),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(picked),
                 )
-                Spacer(Modifier.height(18.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(picked),
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = stringResource(R.string.color_preview),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.color_preview),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            text = String.format(Locale.US, "#%06X", picked.toArgb() and 0xFFFFFF),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
-                Spacer(Modifier.height(14.dp))
-                Text(
-                    text = stringResource(R.string.color_hue),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                CouiSlider(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = hue,
-                    onValueChange = { hue = it },
-                    valueRange = 0f..360f,
-                )
-                Text(
-                    text = stringResource(R.string.color_saturation),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                CouiSlider(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = saturation,
-                    onValueChange = { saturation = it },
-                    valueRange = 0f..1f,
-                )
-                Spacer(Modifier.height(18.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilledTonalButton(
-                        onClick = onDismiss,
-                        shape = CircleShape,
-                        modifier = Modifier.weight(1f).height(48.dp),
-                    ) {
-                        Text(stringResource(R.string.action_cancel))
-                    }
-                    Button(
-                        onClick = { onConfirm(picked) },
-                        shape = CircleShape,
-                        modifier = Modifier.weight(1f).height(48.dp),
-                    ) {
-                        Text(stringResource(R.string.action_use))
-                    }
+                    Text(
+                        text = String.format(Locale.US, "#%06X", picked.toArgb() and 0xFFFFFF),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
                 }
             }
+            Spacer(Modifier.height(14.dp))
+            Text(
+                text = stringResource(R.string.color_hue),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Slider(
+                modifier = Modifier.fillMaxWidth(),
+                value = hue,
+                onValueChange = { hue = it },
+                valueRange = 0f..360f,
+            )
+            Text(
+                text = stringResource(R.string.color_saturation),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Slider(
+                modifier = Modifier.fillMaxWidth(),
+                value = saturation,
+                onValueChange = { saturation = it },
+                valueRange = 0f..1f,
+            )
         }
     }
 }

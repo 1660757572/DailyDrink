@@ -89,6 +89,8 @@
     <string name="profile_nickname_label">昵称</string>
     <string name="profile_nickname_placeholder">给自己起个名字</string>
     <string name="profile_nickname_hint">用于「我的」页面与徽章分享</string>
+    <string name="profile_nickname_edit">修改昵称</string>
+    <string name="action_save">保存</string>
 
     <string name="mine_section_target">每日目标</string>
     <string name="mine_section_reminder">提醒</string>
@@ -215,6 +217,8 @@
     <string name="dialog_time">记录时间</string>
     <string name="dialog_time_summary">补记漏记的饮水，只能选今天已过去的时刻</string>
     <string name="dialog_time_pick">选择记录时间</string>
+    <string name="dialog_time_hour">小时</string>
+    <string name="dialog_time_minute">分钟</string>
     <string name="dialog_clear_input">清除输入</string>
     <string name="dialog_new_type">新增饮品</string>
     <string name="dialog_new_type_hint">自定义饮品按 100% 补水计算</string>
@@ -233,6 +237,7 @@
 
     <string name="medal_filter_all">全部</string>
     <string name="medal_filter_unlocked">已获得</string>
+    <string name="medal_filter_menu">选择分类</string>
     <string name="medal_empty_unlocked">还没有点亮的徽章，继续喝水就能解锁</string>
     <string name="medal_section_catalog">徽章墙</string>
     <string name="medal_best_streak">最长连续</string>

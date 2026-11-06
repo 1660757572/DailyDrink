@@ -19,16 +19,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,7 +43,9 @@ import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
 import com.aquaday.app.data.AchievementProgress
 import com.aquaday.app.ui.components.AquaLinearProgress
+import com.aquaday.app.ui.components.AquaLongButton
 import com.aquaday.app.ui.components.bleedHorizontal
+import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.theme.CouiTheme
 
 /** 徽章在列表与详情之间用同一个键接续，滑动到的那一枚才参与共享。 */
@@ -55,17 +56,22 @@ private const val DetailPanelHeight = 500
 /**
  * 徽章详情：整页是一张铺到屏幕边缘的渐变面板，左右滑动浏览同一分类下的其他徽章。
  * startIndex 只在首次进入时读取，滑动不再改动路由，避免 AnimatedContent 重新过场。
+ * 这里用不参与保存的 PagerState：路由的 SaveableStateHolder 会还原上次滑到的页码，
+ * 重新点开另一枚徽章时会落在旧页。
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MedalDetailScreen(
     items: List<AchievementProgress>,
     startIndex: Int,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     if (items.isEmpty()) return
-    val pager = rememberPagerState(initialPage = startIndex.coerceIn(0, items.lastIndex)) { items.size }
+    val start = startIndex.coerceIn(0, items.lastIndex)
+    val pager = remember(start, items.size) { PagerState(start) { items.size } }
 
     HorizontalPager(
         state = pager,
@@ -76,6 +82,8 @@ fun MedalDetailScreen(
         val progress = items[page]
         MedalDetailPage(
             progress = progress,
+            backdrop = backdrop,
+            dark = dark,
             scope = sharedTransitionScope,
             animatedVisibilityScope = animatedVisibilityScope,
         )
@@ -91,6 +99,8 @@ fun MedalDetailScreen(
 @Composable
 private fun MedalDetailPage(
     progress: AchievementProgress,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
     scope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
@@ -168,7 +178,9 @@ private fun MedalDetailPage(
         Spacer(Modifier.weight(1f))
         Spacer(Modifier.height(18.dp))
         if (progress.unlocked) {
-            Button(
+            AquaLongButton(
+                text = stringResource(R.string.medal_share),
+                icon = Icons.Filled.Share,
                 onClick = {
                     context.startActivity(
                         Intent.createChooser(
@@ -183,18 +195,11 @@ private fun MedalDetailPage(
                         ),
                     )
                 },
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = onSurface, contentColor = surface),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-            ) {
-                Icon(imageVector = Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.medal_share),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
+                backdrop = backdrop,
+                dark = dark,
+                modifier = Modifier.fillMaxWidth(),
+                height = 52.dp,
+            )
         } else {
             Text(
                 text = stringResource(R.string.medal_share_locked_hint),

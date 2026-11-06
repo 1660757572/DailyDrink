@@ -31,7 +31,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Alarm
@@ -73,7 +73,8 @@ import com.aquaday.app.ui.components.AquaSwitchRow
 import com.aquaday.app.ui.components.AvatarCropDialog
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
-import com.itos.coui.slider.CouiSlider
+import com.itos.coui.scroll.couiVerticalScroll
+import com.itos.coui.slider.Slider
 import com.itos.coui.theme.CouiTheme
 
 private const val STEP_COUNT = 5
@@ -99,6 +100,8 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
     pendingAvatar?.let { uri ->
         AvatarCropDialog(
             uri = uri,
+            backdrop = backdrop,
+            dark = dark,
             onDismiss = { pendingAvatar = null },
             onCropped = { bitmap ->
                 pendingAvatar = null
@@ -188,7 +191,7 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
                     Column(
                         Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
+                            .couiVerticalScroll(rememberScrollState())
                             .padding(bottom = 128.dp),
                     ) {
                         Spacer(Modifier.height(if (current == 0) 40.dp else 4.dp))
@@ -375,7 +378,7 @@ private fun GoalStep(goalDraft: Float, onGoalChange: (Float) -> Unit) {
                 )
             }
             Spacer(Modifier.height(12.dp))
-            CouiSlider(
+            Slider(
                 modifier = Modifier.fillMaxWidth(),
                 value = goalDraft,
                 onValueChange = onGoalChange,

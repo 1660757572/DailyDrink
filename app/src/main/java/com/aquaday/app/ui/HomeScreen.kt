@@ -53,10 +53,10 @@ import com.aquaday.app.ui.components.AquaProgressRing
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.itos.coui.backdrop.CouiBackdrop
-import com.itos.coui.dialog.CouiAlertDialog
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
+import com.itos.coui.dialog.Dialog
 import com.itos.coui.theme.CouiTheme
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
@@ -69,6 +69,7 @@ fun HomeScreen(
     viewModel: AquaViewModel,
     onAdd: () -> Unit,
     backdrop: CouiBackdrop,
+    dialogBackdrop: CouiBackdrop,
     dark: Boolean,
 ) {
     val metrics = state.metrics ?: return
@@ -261,8 +262,9 @@ fun HomeScreen(
     }
 
     pendingDelete?.let { event ->
-        CouiAlertDialog(
+        Dialog(
             onDismissRequest = { pendingDelete = null },
+            dark = dark,
             title = stringResource(R.string.home_delete_title),
             message = stringResource(R.string.home_delete_confirm, event.at.asClock(), event.amountMl),
             confirmAction = CouiDialogAction(
@@ -278,6 +280,8 @@ fun HomeScreen(
                 text = stringResource(R.string.action_cancel),
                 onClick = { pendingDelete = null },
             ),
+            material = if (CouiDialogDefaults.isMaterialSupported()) CouiDialogDefaults.material(dark) else null,
+            backdrop = dialogBackdrop,
         )
     }
 }

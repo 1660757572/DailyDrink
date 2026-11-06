@@ -59,13 +59,13 @@ import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.itos.coui.backdrop.CouiBackdrop
-import com.itos.coui.dialog.CouiAlertDialog
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
 import com.itos.coui.dialog.CouiDialogPlacement
+import com.itos.coui.dialog.Dialog
 import com.itos.coui.effect.CouiFloatingRenderer
-import com.itos.coui.floatingactionbutton.CouiFab
+import com.itos.coui.floatingactionbutton.Fab
 import com.itos.coui.theme.CouiTheme
 
 private const val REPO_URL = "https://github.com/1660757572/DailyDrink"
@@ -74,7 +74,7 @@ private const val ISSUE_URL = "$REPO_URL/issues"
 private enum class AboutDoc { License, ThirdParty }
 
 @Composable
-fun AboutScreen(backdrop: CouiBackdrop, dark: Boolean) {
+fun AboutScreen(backdrop: CouiBackdrop, dialogBackdrop: CouiBackdrop, dark: Boolean) {
     val uriHandler = LocalUriHandler.current
     var doc by remember { mutableStateOf<AboutDoc?>(null) }
     val versionName = BuildConfig.VERSION_NAME
@@ -194,6 +194,8 @@ fun AboutScreen(backdrop: CouiBackdrop, dark: Boolean) {
             body = stringResource(
                 if (target == AboutDoc.License) R.string.about_license_body else R.string.about_third_party_body,
             ),
+            backdrop = dialogBackdrop,
+            dark = dark,
             onDismiss = { doc = null },
         )
     }
@@ -305,13 +307,12 @@ private fun CouiCircleAction(
     dark: Boolean,
     onClick: () -> Unit,
 ) {
-    CouiFab(
+    Fab(
         backdrop = backdrop,
         renderer = remember { CouiFloatingRenderer.standalone() },
         onClick = onClick,
         dark = dark,
-    ) {
-        Icon(
+    ) {        Icon(
             imageVector = icon,
             contentDescription = description,
             modifier = Modifier.size(22.dp),
@@ -359,9 +360,10 @@ private fun AboutChevron() {
 }
 
 @Composable
-private fun DocDialog(title: String, body: String, onDismiss: () -> Unit) {
-    CouiAlertDialog(
+private fun DocDialog(title: String, body: String, backdrop: CouiBackdrop, dark: Boolean, onDismiss: () -> Unit) {
+    Dialog(
         onDismissRequest = onDismiss,
+        dark = dark,
         title = title,
         message = body,
         confirmAction = CouiDialogAction(
@@ -371,5 +373,7 @@ private fun DocDialog(title: String, body: String, onDismiss: () -> Unit) {
             colors = aquaPrimaryActionColors(CouiTheme.colorScheme.accent),
         ),
         placement = CouiDialogPlacement.Center,
+        material = if (CouiDialogDefaults.isMaterialSupported()) CouiDialogDefaults.material(dark) else null,
+        backdrop = backdrop,
     )
 }

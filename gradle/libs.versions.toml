@@ -8,7 +8,7 @@ composeBom = "2026.08.01"
 composeFoundation = "1.12.0"
 datastore = "1.2.1"
 work = "2.12.0"
-coui = "0.0.1-alpha4"
+coui = "0.0.1-alpha7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

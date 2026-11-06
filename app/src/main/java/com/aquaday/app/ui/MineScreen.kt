@@ -45,10 +45,11 @@ import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.aquaday.app.ui.components.AquaSliderRow
-import com.itos.coui.dialog.CouiAlertDialog
+import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
+import com.itos.coui.dialog.Dialog
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -60,6 +61,8 @@ fun MineScreen(
     onOpenPermission: () -> Unit,
     onOpenAppearance: () -> Unit,
     onOpenAbout: () -> Unit,
+    dialogBackdrop: CouiBackdrop,
+    dark: Boolean,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
@@ -224,8 +227,9 @@ fun MineScreen(
     )
 
     if (showReset) {
-        CouiAlertDialog(
+        Dialog(
             onDismissRequest = { showReset = false },
+            dark = dark,
             title = stringResource(R.string.setting_reset),
             message = stringResource(R.string.setting_reset_confirm),
             confirmAction = CouiDialogAction(
@@ -238,6 +242,8 @@ fun MineScreen(
                 colors = CouiDialogDefaults.primaryActionColors(AquaDanger),
             ),
             dismissAction = CouiDialogAction(text = stringResource(R.string.action_cancel), onClick = { showReset = false }),
+            material = if (CouiDialogDefaults.isMaterialSupported()) CouiDialogDefaults.material(dark) else null,
+            backdrop = dialogBackdrop,
         )
     }
 }

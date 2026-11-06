@@ -21,11 +21,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,8 +49,13 @@ import com.aquaday.app.ui.components.AquaSectionTitle
 import com.aquaday.app.ui.components.AquaTileShape
 import com.aquaday.app.ui.components.bleedHorizontal
 import com.itos.coui.backdrop.CouiBackdrop
+import com.itos.coui.chip.ChipTabButton
+import com.itos.coui.chip.ChipTabRow
 import com.itos.coui.chip.CouiChipTabItem
-import com.itos.coui.chip.CouiChipTabRow
+import com.itos.coui.menu.CouiMenuItem
+import com.itos.coui.menu.Menu
+import com.itos.coui.menu.couiMenuAnchor
+import com.itos.coui.menu.rememberCouiMenuAnchor
 import com.itos.coui.theme.CouiTheme
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -167,7 +176,22 @@ private fun CouiCategoryTabs(
     val items = remember(labels) {
         labels.mapIndexed { index, label -> CouiChipTabItem(key = index, label = label) }
     }
-    CouiChipTabRow(
+    var menuOpen by remember { mutableStateOf(false) }
+    val anchor = rememberCouiMenuAnchor()
+    val menuItems = remember(labels, selected) {
+        labels.mapIndexed { index, label -> CouiMenuItem(index, label, selected = index == selected) }
+    }
+    Menu(
+        expanded = menuOpen,
+        onDismissRequest = { menuOpen = false },
+        items = menuItems,
+        onItemClick = { item ->
+            onSelect(item.value)
+            menuOpen = false
+        },
+        anchor = anchor,
+    )
+    ChipTabRow(
         modifier = Modifier.fillMaxWidth().bleedHorizontal(),
         items = items,
         selectedKey = selected,
@@ -175,6 +199,22 @@ private fun CouiCategoryTabs(
         backdrop = backdrop,
         dark = dark,
         itemSpacing = 6.dp,
+        // 分类多到需要横向滚动时，用前置按钮直接展开全部分类。
+        leadingAction = {
+            ChipTabButton(
+                modifier = Modifier.couiMenuAnchor(anchor),
+                onClick = { anchor.open { menuOpen = true } },
+                contentDescription = stringResource(R.string.medal_filter_menu),
+                backdrop = backdrop,
+                dark = dark,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.FilterList,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        },
     )
 }
 

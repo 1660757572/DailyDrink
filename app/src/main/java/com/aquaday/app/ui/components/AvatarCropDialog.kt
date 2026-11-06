@@ -48,11 +48,12 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
 import com.aquaday.app.ui.aquaPrimaryActionColors
-import com.itos.coui.dialog.CouiAlertDialog
+import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
-import com.itos.coui.slider.CouiSlider
+import com.itos.coui.dialog.Dialog
+import com.itos.coui.slider.Slider
 import com.itos.coui.theme.CouiTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -69,6 +70,8 @@ private const val MAX_ZOOM = 4f
 @Composable
 fun AvatarCropDialog(
     uri: Uri,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
     onDismiss: () -> Unit,
     onCropped: (Bitmap) -> Unit,
 ) {
@@ -86,8 +89,9 @@ fun AvatarCropDialog(
         offset = Offset.Zero
     }
 
-    CouiAlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
+        dark = dark,
         title = stringResource(R.string.avatar_crop_title),
         message = stringResource(R.string.avatar_crop_hint),
         confirmAction = CouiDialogAction(
@@ -109,6 +113,8 @@ fun AvatarCropDialog(
             text = stringResource(R.string.action_cancel),
             onClick = onDismiss,
         ),
+        material = if (CouiDialogDefaults.isMaterialSupported()) CouiDialogDefaults.material(dark) else null,
+        backdrop = backdrop,
         content = {
             Column(Modifier.fillMaxWidth()) {
                 Box(
@@ -172,7 +178,7 @@ fun AvatarCropDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                CouiSlider(
+                Slider(
                     modifier = Modifier.fillMaxWidth(),
                     value = zoom,
                     onValueChange = {

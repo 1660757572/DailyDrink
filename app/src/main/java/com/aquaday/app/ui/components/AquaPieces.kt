@@ -37,8 +37,8 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.ui.LocalAquaContainerAlpha
-import com.itos.coui.slider.CouiSlider
-import com.itos.coui.switch.CouiSwitch
+import com.itos.coui.slider.Slider
+import com.itos.coui.switch.Switch
 import com.itos.coui.theme.CouiTheme
 
 val AquaCardShape = RoundedCornerShape(22.dp)
@@ -164,7 +164,7 @@ fun AquaSwitchRow(
         iconTint = iconTint,
         enabled = enabled,
         trailing = {
-            CouiSwitch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
+            Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
         },
     )
 }
@@ -195,7 +195,7 @@ fun AquaSliderRow(
             Text(text = summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(6.dp))
-        CouiSlider(
+        Slider(
             modifier = Modifier.fillMaxWidth(),
             value = value,
             onValueChange = onValueChange,

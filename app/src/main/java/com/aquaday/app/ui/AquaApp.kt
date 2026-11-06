@@ -9,8 +9,6 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,6 +29,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -42,7 +41,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -82,6 +80,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -104,11 +103,12 @@ import com.aquaday.app.ui.components.AquaAddSheet
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.effect.CouiFloatingRenderer
-import com.itos.coui.navigation.CouiBottomBar
 import com.itos.coui.navigation.CouiNavigationItem
+import com.itos.coui.navigation.NavigationBar
+import com.itos.coui.scroll.couiVerticalScroll
 import com.itos.coui.theme.CouiTheme
-import com.itos.coui.topappbar.CouiTopAppBar
-import com.itos.coui.topappbar.CouiTopAppBarButton
+import com.itos.coui.topappbar.TopAppBar
+import com.itos.coui.topappbar.TopAppBarButton
 
 /** API 34 起 RuntimeShader 可用，悬浮底栏与顶栏按钮才具备浮动材质。 */
 @RequiresApi(34)
@@ -228,6 +228,8 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
         )
     }
     val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 56.dp
+    // 宿主页只在自身窗口获焦时避让键盘；输入弹窗打开后由弹窗自己处理，避免提前空出一截。
+    val imePadding = if (LocalWindowInfo.current.isWindowFocused) Modifier.imePadding() else Modifier
     val bottomPadding = if (inSubpage) {
         32.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     } else {
@@ -265,7 +267,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                 }
                 AnimatedContent(
                     targetState = route,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().then(imePadding),
                     contentAlignment = Alignment.TopCenter,
                     transitionSpec = {
                         (fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.985f))
@@ -283,7 +285,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                         Column(
                             Modifier
                                 .fillMaxSize()
-                                .verticalScroll(scroll)
+                                .couiVerticalScroll(scroll)
                                 .graphicsLayer {
                                     val gesture = if (inSubpage) backProgress else 0f
                                     val scale = 1f - 0.03f * gesture
@@ -315,6 +317,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                     viewModel,
                                     onAdd = { addOpen = true },
                                     backdrop = pageBackdrop,
+                                    dialogBackdrop = backdrop,
                                     dark = dark,
                                 )
                                 AquaPage.Calendar -> CalendarScreen(state, viewModel)
@@ -339,6 +342,8 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                     onOpenPermission = { subpageIndex = AquaSubpage.Permission.ordinal },
                                     onOpenAppearance = { subpageIndex = AquaSubpage.Appearance.ordinal },
                                     onOpenAbout = { subpageIndex = AquaSubpage.About.ordinal },
+                                    dialogBackdrop = backdrop,
+                                    dark = dark,
                                     sharedTransitionScope = this@SharedTransitionLayout,
                                     animatedVisibilityScope = animatedVisibilityScope,
                                 )
@@ -348,15 +353,27 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                     state,
                                     viewModel,
                                     backdrop = pageBackdrop,
+                                    dialogBackdrop = backdrop,
                                     dark = dark,
                                 )
-                                AquaSubpage.Profile -> ProfileScreen(state, viewModel)
-                                AquaSubpage.About -> AboutScreen(backdrop = pageBackdrop, dark = dark)
+                                AquaSubpage.Profile -> ProfileScreen(
+                                    state = state,
+                                    viewModel = viewModel,
+                                    backdrop = backdrop,
+                                    dark = dark,
+                                )
+                                AquaSubpage.About -> AboutScreen(
+                                    backdrop = pageBackdrop,
+                                    dialogBackdrop = backdrop,
+                                    dark = dark,
+                                )
                                 else -> MedalDetailScreen(
-                                    medalItems,
-                                    medalStart,
-                                    this@SharedTransitionLayout,
-                                    animatedVisibilityScope,
+                                    items = medalItems,
+                                    startIndex = medalStart,
+                                    backdrop = pageBackdrop,
+                                    dark = dark,
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = animatedVisibilityScope,
                                 )
                             }
                             Spacer(Modifier.height(24.dp))
@@ -365,26 +382,40 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                 }
             }
 
-            CouiTopAppBar(modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(), backdrop = backdrop) {
-                AquaTopBarContent(
-                    title = routeTitle,
-                    compactAlpha = collapse,
-                    showBack = inSubpage,
-                    onBack = { if (medalDetail) medalDetail = false else subpageIndex = -1 },
-                )
-            }
+            TopAppBar(
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+                backdrop = backdrop,
+                navigationIcon = {
+                    if (inSubpage) {
+                        val onBack = { if (medalDetail) medalDetail = false else subpageIndex = -1 }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                            TopAppBarButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.action_back),
+                                    modifier = Modifier.size(22.dp),
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.action_back),
+                                    modifier = Modifier.size(22.dp),
+                                )
+                            }
+                        }
+                    }
+                },
+                title = { AquaTopBarContent(title = routeTitle, compactAlpha = collapse) },
+            )
 
             if (!inSubpage) {
                 val fabVisible = page == AquaPage.Home
-                val barShift by animateFloatAsState(
-                    targetValue = if (fabVisible) 1f else 0f,
-                    animationSpec = spring(dampingRatio = 0.65f, stiffness = 130f),
-                    label = "bottomBarShift",
-                )
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && floatingBar != null) {
-                        CouiBottomBar(
-                            modifier = Modifier.fillMaxWidth().shiftFloatBar(barShift),
+                        NavigationBar(
+                            modifier = Modifier.fillMaxWidth().widenFloatBar(),
                             backdrop = backdrop,
                             renderer = floatingBar.bottom,
                             items = items,
@@ -418,6 +449,8 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                     defaultCupMl = state.metrics?.snapshot?.settings?.defaultCupMl ?: 200,
                     goalMl = state.metrics?.snapshot?.goalMl ?: 2000,
                     types = state.metrics?.snapshot?.drinkTypes ?: DrinkType.builtins,
+                    backdrop = backdrop,
+                    dark = dark,
                     onDismiss = { addOpen = false },
                     onCreateType = { label -> viewModel.addDrinkType(label) },
                     onConfirm = { amount, type, at ->
@@ -577,49 +610,15 @@ private fun AquaLargeTitle(title: String, collapse: Float) {
     )
 }
 
+/** 只放顶栏标题；返回按钮交给 TopAppBar 的 navigationIcon 槽位，避免被栏高裁掉。 */
 @Composable
-private fun AquaTopBarContent(
-    title: String,
-    compactAlpha: Float,
-    showBack: Boolean = false,
-    onBack: () -> Unit = {},
-) {
-    Column(Modifier.padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(start = if (showBack) 8.dp else 16.dp, end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (showBack) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    CouiTopAppBarButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back),
-                            modifier = Modifier.size(22.dp),
-                        )
-                    }
-                } else {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back),
-                            modifier = Modifier.size(22.dp),
-                        )
-                    }
-                }
-                Spacer(Modifier.width(4.dp))
-            }
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.graphicsLayer { alpha = compactAlpha },
-            )
-        }
-    }
+private fun AquaTopBarContent(title: String, compactAlpha: Float) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.graphicsLayer { alpha = compactAlpha },
+    )
 }
 
 /** API 31–33 没有浮动材质，退回同色的普通底栏。 */
@@ -662,18 +661,16 @@ private fun ThemeMode.label(): String = stringResource(
     },
 )
 
-/** 底栏胶囊的加宽量：无附件时对称加宽，首页出现 + 号时再向左生长。 */
-private val BottomBarBaseExtra = 24.dp
-private val BottomBarMaxExtra = 67.dp
+/** 底栏胶囊的统一加宽量。 */
+private val BottomBarExtra = 67.dp
 
 /**
  * COUI 底栏把胶囊宽度写死成「可用宽度 - 136dp」，四项在手机上偏挤。
- * 这里放宽测量宽度：多出的宽度全部给胶囊，附件槽位所在的两端被裁到屏幕外。
- * 无附件时对称放置保持居中；有附件时整体左移，+ 号仍停在右侧原位。
+ * 所有页面都按同一宽度加宽并向左让出同样的距离：胶囊长度与位置不随页签变化，
+ * 切页时只有右侧 + 号播放 COUI 的退场动画，不会被宽度变化掩盖。
  */
-private fun Modifier.shiftFloatBar(progress: Float): Modifier = layout { measurable, constraints ->
-    val base = BottomBarBaseExtra.roundToPx()
-    val extra = base + ((BottomBarMaxExtra - BottomBarBaseExtra) * progress).roundToPx()
+private fun Modifier.widenFloatBar(): Modifier = layout { measurable, constraints ->
+    val extra = BottomBarExtra.roundToPx()
     val width = constraints.maxWidth + extra
     val placeable = measurable.measure(
         Constraints(
@@ -683,9 +680,8 @@ private fun Modifier.shiftFloatBar(progress: Float): Modifier = layout { measura
             maxHeight = constraints.maxHeight,
         ),
     )
-    val offset = -extra / 2f * (1f + progress)
     layout(constraints.maxWidth, placeable.height) {
-        placeable.place(offset.roundToInt(), 0)
+        placeable.place(-extra, 0)
     }
 }
 

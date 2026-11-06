@@ -175,7 +175,7 @@
     <string name="about_section_stack">技术栈</string>
     <string name="about_section_info">应用信息</string>
     <string name="about_help_log_title">记录喝水</string>
-    <string name="about_help_log_body">首页的快捷容量一点即记，「记一杯」可以改容量、饮品和时间。</string>
+    <string name="about_help_log_body">首页的快捷容量一点即记，「记一杯」按默认一杯容量直接记录，右下角加号可以改容量、饮品和时间。</string>
     <string name="about_help_reminder_title">定时提醒</string>
     <string name="about_help_reminder_body">按间隔与活跃时段提醒，通知里可以直接确认或稍后提醒。</string>
     <string name="about_help_progress_title">成就与日历</string>

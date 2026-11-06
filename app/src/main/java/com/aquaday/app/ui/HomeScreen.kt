@@ -67,7 +67,6 @@ private val HomeQuickAmounts = listOf(150, 200, 300, 500)
 fun HomeScreen(
     state: AquaUiState,
     viewModel: AquaViewModel,
-    onAdd: () -> Unit,
     backdrop: CouiBackdrop,
     dialogBackdrop: CouiBackdrop,
     dark: Boolean,
@@ -191,7 +190,8 @@ fun HomeScreen(
         AquaLongButton(
             text = stringResource(R.string.action_add),
             icon = Icons.Filled.LocalDrink,
-            onClick = onAdd,
+            // 大按钮一键记录「默认一杯容量」，需要改容量或饮品时走右下角加号。
+            onClick = { viewModel.addDrink(metrics.snapshot.settings.defaultCupMl) },
             backdrop = backdrop,
             dark = dark,
         )

@@ -9,6 +9,8 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,8 +33,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.tappableElement
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -84,7 +90,6 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import androidx.lifecycle.Lifecycle
@@ -100,9 +105,13 @@ import com.aquaday.app.data.DEFAULT_SCRIM
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaAddSheet
+import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.effect.CouiFloatingRenderer
+import com.itos.coui.effect.LocalCouiContourGlowEnabled
+import com.itos.coui.floatingactionbutton.CouiFabDefaults
+import com.itos.coui.floatingactionbutton.Fab
 import com.itos.coui.navigation.CouiNavigationItem
 import com.itos.coui.navigation.NavigationBar
 import com.itos.coui.scroll.couiVerticalScroll
@@ -315,7 +324,6 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                 AquaPage.Home -> HomeScreen(
                                     state,
                                     viewModel,
-                                    onAdd = { addOpen = true },
                                     backdrop = pageBackdrop,
                                     dialogBackdrop = backdrop,
                                     dark = dark,
@@ -412,26 +420,41 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
 
             if (!inSubpage) {
                 val fabVisible = page == AquaPage.Home
+                // 首页把整条底栏向左让位给加号，其他页让胶囊回到正中；弹簧参数取自 COUI 附件展开。
+                val dock by animateFloatAsState(if (fabVisible) 0f else 1f, DockSpring, label = "bottomBarDock")
+                val fabProgress by animateFloatAsState(if (fabVisible) 1f else 0f, DockSpring, label = "addFabScale")
+                val density = LocalDensity.current
+                val tappableBottom = WindowInsets.tappableElement.getBottom(density)
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && floatingBar != null) {
                         NavigationBar(
-                            modifier = Modifier.fillMaxWidth().widenFloatBar(),
+                            modifier = Modifier.fillMaxWidth().dockBar(dock),
                             backdrop = backdrop,
                             renderer = floatingBar.bottom,
                             items = items,
                             selectedIndex = AquaPage.entries.indexOf(page),
-                            rightIcon = Icons.Filled.Add,
-                            rightDescription = stringResource(R.string.action_add),
-                            // 隐藏时仍传入附件参数，CouiFabExpansion 才能播出退场动画。
-                            rightVisible = fabVisible,
-                            onRightClick = { addOpen = true },
-                            // 附件图标由 COUI 固定为白色，底色沿用强调色，只有接近纯白时才回退。
-                            rightContainerColor = fabContainerColor(CouiTheme.colorScheme.accent),
                             // 白色焦散在浅色页面上会糊出一圈方块光晕；rgb 保留给边缘高光，alpha 置零关掉焦散。
                             lightColor = Color.White.copy(alpha = 0f),
                             themeTint = MaterialTheme.colorScheme.background,
                             dark = dark,
                             onSelection = { pageIndex = it.coerceIn(0, AquaPage.entries.lastIndex) },
+                        )
+                        // 加号不走底栏附件：附件跟着底栏一起平移，拆出来才能像原厂那样钉在右下角。
+                        AddFab(
+                            progress = fabProgress,
+                            enabled = fabVisible,
+                            backdrop = backdrop,
+                            dark = dark,
+                            description = stringResource(R.string.action_add),
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .windowInsetsPadding(
+                                    WindowInsets.tappableElement.only(
+                                        WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
+                                    ),
+                                )
+                                .padding(end = 16.dp, bottom = 16.dp + if (tappableBottom > 0) 0.dp else 8.dp),
+                            onClick = { if (fabVisible) addOpen = true },
                         )
                     } else {
                         PlainTabBar(items, AquaPage.entries.indexOf(page)) { pageIndex = it }
@@ -661,27 +684,64 @@ private fun ThemeMode.label(): String = stringResource(
     },
 )
 
-/** 底栏胶囊的统一加宽量。 */
-private val BottomBarExtra = 67.dp
+/** 底栏让位与加号缩放共用同一条弹簧，节奏与 COUI 附件展开一致。 */
+private val DockSpring = spring<Float>(dampingRatio = 0.65f, stiffness = 130.5f)
+
+/** 首页为右下角加号让出的水平距离，约等于原厂底栏一成的屏宽位移。 */
+private val BottomBarDockShift = 46.dp
 
 /**
- * COUI 底栏把胶囊宽度写死成「可用宽度 - 136dp」，四项在手机上偏挤。
- * 所有页面都按同一宽度加宽并向左让出同样的距离：胶囊长度与位置不随页签变化，
- * 切页时只有右侧 + 号播放 COUI 的退场动画，不会被宽度变化掩盖。
+ * 胶囊长度只由测量宽度决定，这里保持测量宽度不变、只改落点：
+ * 首页整条栏左移让出加号的位置，其他页落点归零让胶囊回到屏幕正中。
  */
-private fun Modifier.widenFloatBar(): Modifier = layout { measurable, constraints ->
-    val extra = BottomBarExtra.roundToPx()
-    val width = constraints.maxWidth + extra
-    val placeable = measurable.measure(
-        Constraints(
-            minWidth = width,
-            maxWidth = width,
-            minHeight = constraints.minHeight,
-            maxHeight = constraints.maxHeight,
-        ),
-    )
+private fun Modifier.dockBar(progress: Float): Modifier = layout { measurable, constraints ->
+    val shift = BottomBarDockShift.roundToPx()
+    val placeable = measurable.measure(constraints)
     layout(constraints.maxWidth, placeable.height) {
-        placeable.place(-extra, 0)
+        placeable.place((-shift + shift * progress).roundToInt(), 0)
+    }
+}
+
+/** 钉在右下角的加号，底栏平移时它只按 COUI 附件的方式缩放淡出，不跟着一起走。 */
+@RequiresApi(34)
+@Composable
+private fun AddFab(
+    progress: Float,
+    enabled: Boolean,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+    description: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val density = LocalDensity.current
+    val contour = LocalCouiContourGlowEnabled.current
+    // 附件图标由 COUI 固定为白色，底色沿用强调色，只有接近纯白时才回退。
+    val container = fabContainerColor(CouiTheme.colorScheme.accent)
+    val material = remember(container, dark) { CouiFabDefaults.material(container, dark) }
+    val shadow = remember(container, density.density, contour) {
+        CouiFabDefaults.shadow(container, density.density, contour)
+    }
+    Fab(
+        modifier = modifier.graphicsLayer {
+            val scale = 0.5f + 0.5f * progress
+            scaleX = scale
+            scaleY = scale
+            alpha = progress.coerceIn(0f, 1f)
+        },
+        backdrop = backdrop,
+        renderer = remember { CouiFloatingRenderer.standalone() },
+        onClick = onClick,
+        dark = dark,
+        material = material,
+        shadow = shadow,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = description.takeIf { enabled },
+            modifier = Modifier.size(24.dp),
+            tint = Color.White,
+        )
     }
 }
 

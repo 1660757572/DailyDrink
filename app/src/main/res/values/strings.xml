@@ -8,7 +8,7 @@
     <string name="tab_mine">我的</string>
     <string name="live_activity_channel">喝水实时活动</string>
 
-    <string name="action_add">记一杯</string>
+    <string name="action_add">喝一杯</string>
     <string name="action_theme">切换深浅色</string>
     <string name="action_undo">撤销</string>
     <string name="action_cancel">取消</string>
@@ -138,7 +138,7 @@
     <string name="setting_goal">每日饮水量目标</string>
     <string name="setting_goal_summary">当前 %1$d ml</string>
     <string name="setting_default_cup">默认一杯容量</string>
-    <string name="setting_default_cup_summary">首页「记一杯」与通知按钮按此容量记录</string>
+    <string name="setting_default_cup_summary">首页「喝一杯」与通知按钮按此容量记录</string>
     <string name="setting_reminder_on">定时提醒</string>
     <string name="setting_reminder_summary">活跃时段内按间隔提醒</string>
     <string name="setting_interval">提醒间隔</string>
@@ -175,7 +175,7 @@
     <string name="about_section_stack">技术栈</string>
     <string name="about_section_info">应用信息</string>
     <string name="about_help_log_title">记录喝水</string>
-    <string name="about_help_log_body">首页的快捷容量一点即记，「记一杯」按默认一杯容量直接记录，右下角加号可以改容量、饮品和时间。</string>
+    <string name="about_help_log_body">首页的快捷容量一点即记，「喝一杯」按默认一杯容量直接记录，右下角加号可以改容量、饮品和时间。</string>
     <string name="about_help_reminder_title">定时提醒</string>
     <string name="about_help_reminder_body">按间隔与活跃时段提醒，通知里可以直接确认或稍后提醒。</string>
     <string name="about_help_progress_title">成就与日历</string>
@@ -238,6 +238,8 @@
     <string name="medal_filter_all">全部</string>
     <string name="medal_filter_unlocked">已获得</string>
     <string name="medal_filter_menu">选择分类</string>
+    <string name="medal_view_grid">切换到网格视图</string>
+    <string name="medal_view_list">切换到列表视图</string>
     <string name="medal_empty_unlocked">还没有点亮的徽章，继续喝水就能解锁</string>
     <string name="medal_section_catalog">徽章墙</string>
     <string name="medal_best_streak">最长连续</string>

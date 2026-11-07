@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -51,8 +52,10 @@ import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -84,6 +87,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -109,6 +113,7 @@ import com.itos.coui.navigation.CouiNavigationItem
 import com.itos.coui.navigation.NavigationBar
 import com.itos.coui.scroll.couiVerticalScroll
 import com.itos.coui.theme.CouiTheme
+import com.itos.coui.topappbar.CouiTopAppBarDefaults
 import com.itos.coui.topappbar.TopAppBar
 import com.itos.coui.topappbar.TopAppBarButton
 
@@ -177,6 +182,8 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
     var medalDetail by rememberSaveable { mutableStateOf(false) }
     var medalStart by rememberSaveable { mutableIntStateOf(0) }
     var addOpen by rememberSaveable { mutableStateOf(false) }
+    // 徽章墙两列网格开关；底栏左附件只在成就页出现。
+    var medalGrid by rememberSaveable { mutableStateOf(false) }
     val page = AquaPage.entries.getOrElse(pageIndex) { AquaPage.Home }
     val subpage = AquaSubpage.entries.getOrNull(subpageIndex)
     // 徽章详情与设置二级页共用「离开顶层」这套返回与隐藏底栏的逻辑。
@@ -241,6 +248,8 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
     val routeStates = rememberSaveableStateHolder()
     var collapse by remember { mutableFloatStateOf(0f) }
     val collapseDistance = with(LocalDensity.current) { 40.dp.toPx() }
+    // 双击顶栏只发信号，回到顶部由当前路由自己的滚动状态执行。
+    var scrollToTopTick by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(state.message) {
         val message = state.message ?: return@LaunchedEffect
@@ -280,6 +289,13 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                     val animatedVisibilityScope = this
                     routeStates.SaveableStateProvider(routeKey(target)) {
                         val scroll = rememberScrollState()
+                        // 每个路由只消费自己看到的新信号，切回成就页不会误触发回顶。
+                        var handledTick by rememberSaveable { mutableIntStateOf(0) }
+                        LaunchedEffect(scrollToTopTick, target) {
+                            if (scrollToTopTick == handledTick) return@LaunchedEffect
+                            handledTick = scrollToTopTick
+                            if (target == route && target == AquaPage.Medals) scroll.animateScrollTo(0)
+                        }
                         LaunchedEffect(scroll, target, route) {
                             snapshotFlow { (scroll.value / collapseDistance).coerceIn(0f, 1f) }
                                 .collect { value -> if (target == route) collapse = value }
@@ -328,6 +344,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                     dark = dark,
                                     filter = medalFilter,
                                     onFilterChange = { medalFilter = it },
+                                    grid = medalGrid,
                                     onOpenDetail = { index ->
                                         medalStart = index
                                         medalDetail = true
@@ -384,8 +401,15 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
             }
 
             TopAppBar(
-                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().doubleTapToTop(
+                    enabled = page == AquaPage.Medals && !inSubpage,
+                    onDoubleTap = { scrollToTopTick++ },
+                ),
                 backdrop = backdrop,
+                // 背景遮罩只在无自定义背景时保留（浅色白／深色黑向下渐隐）；铺了背景图就取消遮罩，只留渐进模糊。
+                colors = CouiTopAppBarDefaults.colors(
+                    backgroundColor = if (backgroundImage != null) Color.Transparent else Color.Unspecified,
+                ),
                 navigationIcon = {
                     if (inSubpage) {
                         val onBack = { if (medalDetail) medalDetail = false else subpageIndex = -1 }
@@ -413,8 +437,13 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
 
             if (!inSubpage) {
                 val fabVisible = page == AquaPage.Home
-                // 首页把整条底栏向左让位给加号，其他页让胶囊回到正中；弹簧参数取自 COUI 附件展开。
-                val dock by animateFloatAsState(if (fabVisible) 0f else 1f, DockSpring, label = "bottomBarDock")
+                // 首页把整条底栏向左让位给加号，成就页向右让位给视图切换，其他页落回正中；弹簧参数取自 COUI 附件展开。
+                val dockTarget = when (page) {
+                    AquaPage.Home -> 0f
+                    AquaPage.Medals -> 2f
+                    else -> 1f
+                }
+                val dock by animateFloatAsState(dockTarget, DockSpring, label = "bottomBarDock")
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && floatingBar != null) {
                         NavigationBar(
@@ -423,6 +452,14 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                             renderer = floatingBar.bottom,
                             items = items,
                             selectedIndex = AquaPage.entries.indexOf(page),
+                            // 视图切换用底栏的左附件，与右附件共用 COUI 的附件收拢动效；
+                            // 隐藏期间照样传入参数，只切 leftVisible，否则没有内容可收，退场动画就没了。
+                            leftIcon = if (medalGrid) Icons.Filled.List else Icons.Filled.GridView,
+                            leftDescription = stringResource(
+                                if (medalGrid) R.string.medal_view_list else R.string.medal_view_grid,
+                            ),
+                            leftVisible = page == AquaPage.Medals,
+                            onLeftClick = { medalGrid = !medalGrid },
                             // 加号用底栏的右附件：退场由 COUI 的附件收拢驱动。隐藏期间照样传入附件参数，
                             // 只切 rightVisible，否则附件没有内容可收，退场动画就没了。
                             rightIcon = Icons.Filled.Add,
@@ -701,3 +738,11 @@ private fun fabContainerColor(accent: Color): Color {
         else -> accent
     }
 }
+
+/** 只在成就页给顶栏挂双击手势，其他页面顶栏保持不消费点击。 */
+private fun Modifier.doubleTapToTop(enabled: Boolean, onDoubleTap: () -> Unit): Modifier =
+    if (!enabled) {
+        this
+    } else {
+        pointerInput(enabled) { detectTapGestures(onDoubleTap = { onDoubleTap() }) }
+    }

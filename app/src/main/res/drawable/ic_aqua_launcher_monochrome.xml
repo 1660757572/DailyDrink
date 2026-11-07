@@ -6,10 +6,10 @@
     android:viewportHeight="108">
     <!-- 单色层与前景同形，系统按需重新着色为壁纸色。 -->
     <group
-        android:translateX="24"
-        android:translateY="24"
-        android:scaleX="2.5"
-        android:scaleY="2.5">
+        android:translateX="27"
+        android:translateY="27"
+        android:scaleX="2.25"
+        android:scaleY="2.25">
         <path
             android:fillColor="#FFFFFFFF"
             android:pathData="M5.7,8.375Q6.975,7.7 8.338,7.35T11.125,7q0.75,0 1.488,0.1t1.462,0.3q1.25,0.35 1.913,0.475T17.4,8h0.925l0.425,-4H5.25zM6.975,22q-0.775,0 -1.337,-0.5T5,20.225L3.275,4.475q-0.125,-1 0.55,-1.737T5.5,2h13q1,0 1.675,0.738t0.55,1.737L19,20.225q-0.075,0.775 -0.638,1.275t-1.337,0.5z" />

@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
 import com.aquaday.app.data.AchievementProgress
@@ -66,6 +67,7 @@ fun MedalsScreen(
     dark: Boolean,
     filter: Int,
     onFilterChange: (Int) -> Unit,
+    grid: Boolean,
     onOpenDetail: (Int) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
@@ -143,24 +145,129 @@ fun MedalsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
-        visible.forEachIndexed { index, progress ->
-            MedalRow(
-                progress = progress,
-                onClick = { onOpenDetail(index) },
-                sharedModifier = with(sharedTransitionScope) {
-                    Modifier.sharedElement(
-                        rememberSharedContentState(key = medalSharedKey(progress.achievement.id)),
-                        animatedVisibilityScope = animatedVisibilityScope,
-                    )
-                },
+        } else if (grid) {
+            MedalGrid(
+                items = visible,
+                onOpenDetail = onOpenDetail,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope,
             )
-            if (index != visible.lastIndex) {
-                Spacer(Modifier.height(14.dp))
-                AquaDivider()
-                Spacer(Modifier.height(14.dp))
+        } else {
+            visible.forEachIndexed { index, progress ->
+                MedalRow(
+                    progress = progress,
+                    onClick = { onOpenDetail(index) },
+                    sharedModifier = with(sharedTransitionScope) {
+                        Modifier.sharedElement(
+                            rememberSharedContentState(key = medalSharedKey(progress.achievement.id)),
+                            animatedVisibilityScope = animatedVisibilityScope,
+                        )
+                    },
+                )
+                if (index != visible.lastIndex) {
+                    Spacer(Modifier.height(14.dp))
+                    AquaDivider()
+                    Spacer(Modifier.height(14.dp))
+                }
             }
         }
+    }
+}
+
+/** 两列网格徽章墙；整页仍由外壳的列滚动，所以按行分块而不是用懒加载网格。 */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun MedalGrid(
+    items: List<AchievementProgress>,
+    onOpenDetail: (Int) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+) {
+    items.chunked(2).forEachIndexed { rowIndex, row ->
+        if (rowIndex > 0) Spacer(Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            row.forEachIndexed { columnIndex, progress ->
+                MedalCell(
+                    modifier = Modifier.weight(1f),
+                    progress = progress,
+                    onClick = { onOpenDetail(rowIndex * 2 + columnIndex) },
+                    sharedModifier = with(sharedTransitionScope) {
+                        Modifier.sharedElement(
+                            rememberSharedContentState(key = medalSharedKey(progress.achievement.id)),
+                            animatedVisibilityScope = animatedVisibilityScope,
+                        )
+                    },
+                )
+            }
+            // 末尾只剩一枚时用占位保持列宽，避免它被拉成整行。
+            if (row.size == 1) Spacer(Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun MedalCell(
+    modifier: Modifier,
+    progress: AchievementProgress,
+    onClick: () -> Unit,
+    sharedModifier: Modifier,
+) {
+    val achievement = progress.achievement
+    val tierColor = tierColor(achievement.tier)
+    val accent = CouiTheme.colorScheme.accent
+    val dimmed = !progress.unlocked
+    Column(
+        modifier
+            .fillMaxWidth()
+            .clip(AquaTileShape)
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier
+                .size(52.dp)
+                .then(sharedModifier)
+                .clip(RoundedCornerShape(percent = 32))
+                .background(if (progress.unlocked) tierColor.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = achievement.icon,
+                contentDescription = achievement.title,
+                modifier = Modifier.size(26.dp),
+                tint = if (progress.unlocked) tierColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = achievement.title,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (dimmed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (progress.unlocked) FontWeight.Medium else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = achievement.tier.label,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (progress.unlocked) tierColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        )
+        Spacer(Modifier.height(6.dp))
+        AquaLinearProgress(
+            ratio = progress.ratio,
+            color = if (progress.unlocked) accent else accent.copy(alpha = 0.4f),
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = if (progress.unlocked) stringResource(R.string.medal_unlocked_now)
+            else stringResource(R.string.medal_locked, progress.detail),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (progress.unlocked) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

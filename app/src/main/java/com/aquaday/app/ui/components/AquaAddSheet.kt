@@ -44,7 +44,7 @@ import kotlin.math.roundToInt
 private val QuickAmounts = listOf(150, 200, 300, 500)
 
 /**
- * 记一杯：快捷份量 + 自定义滑杆 + 饮品类型 + 记录时间。
+ * 喝一杯：快捷份量 + 自定义滑杆 + 饮品类型 + 记录时间。
  * 时间只允许选今天已过去的时刻，用于补记漏掉的饮水。
  */
 @Composable

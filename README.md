@@ -5,7 +5,7 @@
 [![Platform](https://img.shields.io/badge/Android-31%2B-3DDC84?logo=android&logoColor=white)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Release](https://img.shields.io/badge/Release-v1.8.2-2C2C2E)](https://github.com/1660757572/DailyDrink/releases/latest)
+[![Release](https://img.shields.io/badge/Release-v1.8.3-2C2C2E)](https://github.com/1660757572/DailyDrink/releases/latest)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## 界面预览

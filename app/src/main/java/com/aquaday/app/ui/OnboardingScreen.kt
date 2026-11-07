@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,6 +37,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,6 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -195,13 +201,7 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
                             .padding(bottom = 128.dp),
                     ) {
                         Spacer(Modifier.height(if (current == 0) 40.dp else 4.dp))
-                        Image(
-                            painter = painterResource(R.drawable.ic_aqua_drop),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(if (current == 0) 136.dp else 88.dp)
-                                .align(Alignment.CenterHorizontally),
-                        )
+                        StepHero(current, if (current == 0) 136 else 88)
                         Spacer(Modifier.height(if (current == 0) 28.dp else 16.dp))
                         Text(
                             text = stringResource(
@@ -300,9 +300,36 @@ fun OnboardingScreen(state: AquaUiState, viewModel: AquaViewModel) {
     }
 }
 
+/** 每步标题图标：欢迎步用应用图标，其余用与该步内容对应的 Material 图标。 */
 @Composable
-private fun StepDots(step: Int) {
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun ColumnScope.StepHero(step: Int, sizeDp: Int) {
+    val modifier = Modifier
+        .size(sizeDp.dp)
+        .align(Alignment.CenterHorizontally)
+    if (step == 0) {
+        Image(
+            painter = painterResource(R.drawable.ic_aqua_launcher_foreground),
+            contentDescription = null,
+            modifier = modifier,
+        )
+    } else {
+        val hero: Pair<ImageVector, Color> = when (step) {
+            1 -> Icons.Filled.Person to TintProfile
+            2 -> Icons.Filled.Flag to TintWindow
+            3 -> Icons.Filled.Alarm to TintReminder
+            else -> Icons.Filled.NotificationsActive to TintPermission
+        }
+        Icon(
+            imageVector = hero.first,
+            contentDescription = null,
+            tint = hero.second,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun StepDots(step: Int) {    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         repeat(STEP_COUNT) { index ->
             val active = index == step
             Box(

@@ -1,27 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- 水滴：顶点收束、底部浑圆，浅蓝渐变从左上的高光过渡到右下的水色。 -->
-    <path android:pathData="M54,27C47.5,38.5 37,48.5 37,59.5C37,69.9 44.6,77.5 54,77.5C63.4,77.5 71,69.9 71,59.5C71,48.5 60.5,38.5 54,27Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:type="linear"
-                android:startX="46"
-                android:startY="30"
-                android:endX="66"
-                android:endY="76">
-                <item android:offset="0.0" android:color="#FFC4E9FF" />
-                <item android:offset="0.5" android:color="#FF8FD2FB" />
-                <item android:offset="1.0" android:color="#FF5FB3F2" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <!-- 左上高光，避免纯色水滴在白色背景上显得扁平。 -->
-    <path
-        android:fillColor="#59FFFFFF"
-        android:pathData="M47.5,53.5C47.5,47.8 50.6,43.3 54.4,40.6C51.5,46.2 51.2,51.6 53.4,56.1C54.9,59.2 53.6,63.4 49.6,64.6C48.2,61.4 47.5,57.6 47.5,53.5Z" />
+    <!-- Material Symbols Rounded「water_full」：24 格原稿放大 2.5 倍居中，落在水滴安全区内。 -->
+    <group
+        android:translateX="24"
+        android:translateY="24"
+        android:scaleX="2.5"
+        android:scaleY="2.5">
+        <path
+            android:fillColor="#FF0FA2EB"
+            android:pathData="M5.7,8.375Q6.975,7.7 8.338,7.35T11.125,7q0.75,0 1.488,0.1t1.462,0.3q1.25,0.35 1.913,0.475T17.4,8h0.925l0.425,-4H5.25zM6.975,22q-0.775,0 -1.337,-0.5T5,20.225L3.275,4.475q-0.125,-1 0.55,-1.737T5.5,2h13q1,0 1.675,0.738t0.55,1.737L19,20.225q-0.075,0.775 -0.638,1.275t-1.337,0.5z" />
+    </group>
 </vector>

@@ -5,6 +5,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -138,36 +143,49 @@ fun MedalsScreen(
         }
     }
     Spacer(Modifier.height(8.dp))
+    // 列表↔网格切换时让整面徽章墙渐显，避免硬切；首次进入页面不做淡入。
+    val wallAlpha = remember { Animatable(1f) }
+    var wallInitialized by remember { mutableStateOf(false) }
+    LaunchedEffect(grid) {
+        if (!wallInitialized) {
+            wallInitialized = true
+            return@LaunchedEffect
+        }
+        wallAlpha.snapTo(0f)
+        wallAlpha.animateTo(1f, tween(durationMillis = 500, easing = FastOutSlowInEasing))
+    }
     AquaCard {
-        if (visible.isEmpty()) {
-            Text(
-                text = stringResource(R.string.medal_empty_unlocked),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else if (grid) {
-            MedalGrid(
-                items = visible,
-                onOpenDetail = onOpenDetail,
-                sharedTransitionScope = sharedTransitionScope,
-                animatedVisibilityScope = animatedVisibilityScope,
-            )
-        } else {
-            visible.forEachIndexed { index, progress ->
-                MedalRow(
-                    progress = progress,
-                    onClick = { onOpenDetail(index) },
-                    sharedModifier = with(sharedTransitionScope) {
-                        Modifier.sharedElement(
-                            rememberSharedContentState(key = medalSharedKey(progress.achievement.id)),
-                            animatedVisibilityScope = animatedVisibilityScope,
-                        )
-                    },
+        Column(Modifier.fillMaxWidth().graphicsLayer { alpha = wallAlpha.value }) {
+            if (visible.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.medal_empty_unlocked),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (index != visible.lastIndex) {
-                    Spacer(Modifier.height(14.dp))
-                    AquaDivider()
-                    Spacer(Modifier.height(14.dp))
+            } else if (grid) {
+                MedalGrid(
+                    items = visible,
+                    onOpenDetail = onOpenDetail,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope,
+                )
+            } else {
+                visible.forEachIndexed { index, progress ->
+                    MedalRow(
+                        progress = progress,
+                        onClick = { onOpenDetail(index) },
+                        sharedModifier = with(sharedTransitionScope) {
+                            Modifier.sharedElement(
+                                rememberSharedContentState(key = medalSharedKey(progress.achievement.id)),
+                                animatedVisibilityScope = animatedVisibilityScope,
+                            )
+                        },
+                    )
+                    if (index != visible.lastIndex) {
+                        Spacer(Modifier.height(14.dp))
+                        AquaDivider()
+                        Spacer(Modifier.height(14.dp))
+                    }
                 }
             }
         }
@@ -255,10 +273,13 @@ private fun MedalCell(
             color = if (progress.unlocked) tierColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         )
         Spacer(Modifier.height(6.dp))
-        AquaLinearProgress(
-            ratio = progress.ratio,
-            color = if (progress.unlocked) accent else accent.copy(alpha = 0.4f),
-        )
+        // 网格单元里的进度条累计收短 10%，居中后两侧留白更透气。
+        Box(Modifier.fillMaxWidth(0.90f)) {
+            AquaLinearProgress(
+                ratio = progress.ratio,
+                color = if (progress.unlocked) accent else accent.copy(alpha = 0.4f),
+            )
+        }
         Spacer(Modifier.height(4.dp))
         Text(
             text = if (progress.unlocked) stringResource(R.string.medal_unlocked_now)

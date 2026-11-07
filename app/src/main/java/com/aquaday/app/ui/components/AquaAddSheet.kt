@@ -3,6 +3,7 @@ package com.aquaday.app.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -114,10 +115,12 @@ fun AquaAddSheet(
                 ) {
                     QuickAmounts.forEach { quick ->
                         AquaChip(
-                            text = "$quick ml",
+                            text = "+ $quick",
                             selected = rounded == quick,
                             onClick = { amount = quick.toFloat() },
                             modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 9.dp),
+                            maxLines = 1,
                         )
                     }
                 }

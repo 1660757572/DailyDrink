@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.WaterDrop
@@ -143,10 +144,16 @@ fun CalendarScreen(state: AquaUiState, viewModel: AquaViewModel) {
                 ) {
                     Icon(Icons.Filled.WaterDrop, null, Modifier.size(14.dp), tint = CouiTheme.colorScheme.accent)
                     Spacer(Modifier.size(8.dp))
-                    Text(text = event.at.asClock(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    // 时间列固定宽度，让各行饮品名起点一致。
+                    Text(
+                        text = event.at.asClock(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.width(38.dp),
+                    )
                     Spacer(Modifier.size(10.dp))
                     Text(
-                        text = stringResource(R.string.home_log_entry, event.type.label, event.amountMl, event.effectiveMl),
+                        text = stringResource(R.string.home_log_entry, event.type.label, event.amountMl),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),

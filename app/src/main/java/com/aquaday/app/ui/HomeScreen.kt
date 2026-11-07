@@ -13,6 +13,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -179,10 +180,13 @@ fun HomeScreen(
         ) {
             HomeQuickAmounts.forEach { amount ->
                 AquaChip(
-                    text = "$amount ml",
+                    text = "+ $amount",
                     selected = false,
                     onClick = { viewModel.addDrink(amount) },
                     modifier = Modifier.weight(1f),
+                    // 等分宽度下内边距收窄并强制单行，避免比例字体把「+ 200」挤成两行。
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 9.dp),
+                    maxLines = 1,
                 )
             }
         }
@@ -304,10 +308,16 @@ private fun HomeLogRow(event: DrinkEvent, onDelete: () -> Unit) {
             .padding(start = AquaCardHorizontalPadding, end = 8.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = event.at.asClock(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // 时间列固定宽度，避免比例字体下各时刻宽度不同把后面的饮品名挤得参差不齐。
+        Text(
+            text = event.at.asClock(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(44.dp),
+        )
         Spacer(Modifier.width(12.dp))
         Text(
-            text = stringResource(R.string.home_log_entry, event.type.label, event.amountMl, event.effectiveMl),
+            text = stringResource(R.string.home_log_entry, event.type.label, event.amountMl),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),

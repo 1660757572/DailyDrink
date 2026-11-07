@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -287,6 +288,8 @@ fun AquaChip(
     modifier: Modifier = Modifier,
     leading: ImageVector? = null,
     enabled: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 9.dp),
+    maxLines: Int = Int.MAX_VALUE,
 ) {
     val accent = CouiTheme.colorScheme.accent
     val contentColor = when {
@@ -299,7 +302,7 @@ fun AquaChip(
             .clip(AquaChipShape)
             .background(if (selected) accent else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 14.dp, vertical = 9.dp),
+            .padding(contentPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
     ) {
@@ -309,6 +312,7 @@ fun AquaChip(
             style = MaterialTheme.typography.labelLarge,
             color = contentColor,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = maxLines,
         )
     }
 }

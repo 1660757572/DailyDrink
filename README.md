@@ -1,6 +1,6 @@
 # DailyDrink · 水杯
 
-一款轻量、无广告、数据完全本地的喝水提醒 App。界面基于 ColorOS 17 的 COUI-Kit 风格重做，支持定时提醒、实时活动、达标日历与成就系统。
+一款轻量、无广告、数据完全本地的喝水提醒 App。界面基于 ColorOS 17 的 COUI-Kit 风格设计，支持定时提醒、实时活动、达标日历与成就系统。
 
 [![Platform](https://img.shields.io/badge/Android-31%2B-3DDC84?logo=android&logoColor=white)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)

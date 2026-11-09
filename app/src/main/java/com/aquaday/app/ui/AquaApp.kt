@@ -96,11 +96,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aquaday.app.QuickActions
+import com.aquaday.app.QuickLogRequest
 import com.aquaday.app.R
 import com.aquaday.app.data.Achievements
 import com.aquaday.app.data.ColorStyle
@@ -151,9 +155,23 @@ private enum class AquaSubpage(val titleRes: Int) {
 private object MedalRoute
 
 @Composable
-fun AquaApp(viewModel: AquaViewModel = viewModel()) {
+fun AquaApp(
+    viewModel: AquaViewModel = viewModel(),
+    quickLog: MutableStateFlow<QuickLogRequest?>? = null,
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snapshot = state.metrics?.snapshot
+    val context = LocalContext.current
+    // 默认杯量可变，快捷方式文案跟着最新设置走；小组件的按钮文案也由仓库刷新时同步。
+    val defaultCupMl = snapshot?.settings?.defaultCupMl ?: 200
+    LaunchedEffect(defaultCupMl) { QuickActions.publishShortcuts(context, defaultCupMl) }
+    LaunchedEffect(quickLog) {
+        val events = quickLog ?: return@LaunchedEffect
+        events.filterNotNull().collect { request ->
+            viewModel.logQuick(request.amountMl)
+            events.value = null
+        }
+    }
     val dark = (snapshot?.themeMode ?: ThemeMode.System).resolveDark(isSystemInDarkTheme())
     // 应用内主题可以覆盖系统深色，enableEdgeToEdge 只读系统配置，需要跟随应用主题改写状态栏图标明暗。
     val view = LocalView.current

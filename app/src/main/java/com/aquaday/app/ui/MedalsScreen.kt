@@ -283,8 +283,12 @@ private fun MedalCell(
         }
         Spacer(Modifier.height(4.dp))
         Text(
-            text = if (progress.unlocked) stringResource(R.string.medal_unlocked_now)
-            else stringResource(R.string.medal_locked, progress.detail),
+            text = if (progress.unlocked) {
+                progress.unlockedAt?.let { stringResource(R.string.medal_unlocked_time, it.asDateLabel()) }
+                    ?: stringResource(R.string.medal_unlocked_now)
+            } else {
+                stringResource(R.string.medal_locked, progress.detail)
+            },
             style = MaterialTheme.typography.labelSmall,
             color = if (progress.unlocked) accent else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,

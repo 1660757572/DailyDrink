@@ -72,6 +72,12 @@ class HydrationRepository(private val context: Context) {
         store.logDrink(amountMl, type, at)
     }
 
+    /** 快捷方式/小组件的“喝一杯”：0 表示按当前设置的默认杯量，设置读取必须走最新快照。 */
+    suspend fun logQuick(amountMl: Int) {
+        val resolved = if (amountMl > 0) amountMl else store.snapshot.first().settings.defaultCupMl
+        logDrink(resolved)
+    }
+
     suspend fun addDrinkType(label: String): DrinkType? = store.addDrinkType(label)
 
     suspend fun updateDrinkType(id: String, label: String?, iconKey: String, tintArgb: Int?) =

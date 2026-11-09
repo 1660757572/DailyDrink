@@ -47,5 +47,30 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- 桌面小组件：2×2 快速记录，4×2 额外展示最近获得的徽章。 -->
+        <receiver
+            android:name=".widget.AquaWidgetSmallProvider"
+            android:exported="true"
+            android:label="@string/widget_small_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/aqua_widget_small_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.AquaWidgetWideProvider"
+            android:exported="true"
+            android:label="@string/widget_wide_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/aqua_widget_wide_info" />
+        </receiver>
     </application>
 </manifest>

@@ -17,6 +17,7 @@ import com.aquaday.app.data.ReminderSettings
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.data.WeatherClient
 import com.aquaday.app.data.WeatherInfo
+import com.aquaday.app.widget.AquaWidgets
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -63,6 +64,8 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
                         message = fresh.lastOrNull()?.let { "解锁成就 · ${it.achievement.title}" } ?: previous.message,
                     )
                 }
+                // 小组件与界面同源：数据一落盘就顺手刷新，不必等桌面自身的定时更新。
+                AquaWidgets.updateAll(getApplication<Application>(), metrics)
             }
         }
         // 下一次提醒只在数据变化时算一次会停在旧时间，心跳保证分钟级刷新。
@@ -89,6 +92,9 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
     ) = viewModelScope.launch {
         repository.logDrink(amountMl, type, at)
     }
+
+    /** amountMl 为 0 时记录设置的默认杯量，供桌面快捷方式与小组件直接调用。 */
+    fun logQuick(amountMl: Int) = viewModelScope.launch { repository.logQuick(amountMl) }
 
     fun addDrinkType(label: String, onAdded: (DrinkType) -> Unit = {}) = viewModelScope.launch {
         repository.addDrinkType(label)?.let(onAdded)

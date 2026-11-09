@@ -314,6 +314,28 @@
     <string name="onboarding_summary_permission">随时可以在「我的 → 系统权限」里调整</string>
     <string name="onboarding_preset">%1$d ml</string>
 
+    <!-- 快捷方式与桌面小组件 -->
+    <string name="shortcut_default_cup_short">喝一杯</string>
+    <string name="shortcut_default_cup_long">喝一杯 · %1$d ml</string>
+    <string name="shortcut_amount_short">+ %1$d</string>
+    <string name="shortcut_amount_long">喝 %1$d ml</string>
+    <string name="widget_small_name">水杯 · 今日</string>
+    <string name="widget_wide_name">水杯 · 今日横版</string>
+    <string name="widget_small_description">今日进度与一键记录一杯水</string>
+    <string name="widget_wide_description">今日进度、最近获得的徽章与一键记录</string>
+    <string name="widget_today">今日饮水</string>
+    <string name="widget_goal_format">%1$d / %2$d ml</string>
+    <string name="widget_reached">已达标 · 干得漂亮</string>
+    <string name="widget_action_format">喝一杯 · %1$d ml</string>
+    <string name="widget_badge_label">最近获得</string>
+    <string name="widget_badge_none">还没有点亮徽章</string>
+    <string name="widget_badge_none_meta">记录一杯即可开始</string>
+    <string name="widget_badge_meta">%1$s · %2$s</string>
+    <string name="widget_goal_preview">600 / 2000 ml</string>
+    <string name="widget_action_preview">喝一杯 · 200 ml</string>
+    <string name="widget_badge_preview_title">第一杯水</string>
+    <string name="widget_badge_preview_meta">青铜 · 11 月 8 日</string>
+
     <string-array name="aqua_week_days">
         <item>一</item>
         <item>二</item>

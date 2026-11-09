@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.aquaday.app.QuickActions
 import com.aquaday.app.R
 import com.aquaday.app.data.DrinkEvent
 import com.aquaday.app.data.DrinkType
@@ -64,7 +65,7 @@ import com.itos.coui.theme.CouiTheme
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
-private val HomeQuickAmounts = listOf(150, 200, 300, 500)
+private val HomeQuickAmounts = QuickActions.amounts
 
 @Composable
 fun HomeScreen(

@@ -15,6 +15,8 @@ import com.aquaday.app.data.HydrationMetrics
 import com.aquaday.app.data.HydrationRepository
 import com.aquaday.app.data.ReminderSettings
 import com.aquaday.app.data.ThemeMode
+import com.aquaday.app.data.WeatherClient
+import com.aquaday.app.data.WeatherInfo
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -35,6 +37,7 @@ data class AquaUiState(
     val nextReminderAt: LocalDateTime? = null,
     /** 由心跳推进的当前时间，让"距上次活动"和下次提醒随时间走动。 */
     val now: LocalDateTime = LocalDateTime.now(),
+    val weather: WeatherInfo? = null,
     val message: String? = null,
 )
 
@@ -42,6 +45,7 @@ data class AquaUiState(
 class AquaViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = HydrationRepository(application)
+    private val weatherClient = WeatherClient(application)
     private val _state = MutableStateFlow(AquaUiState())
     val state: StateFlow<AquaUiState> = _state.asStateFlow()
 
@@ -74,6 +78,8 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
+        // 天气变化慢，回到前台刷一次就够，所以不占用心跳。
+        viewModelScope.launch { refreshWeather() }
     }
 
     fun addDrink(
@@ -86,6 +92,10 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addDrinkType(label: String, onAdded: (DrinkType) -> Unit = {}) = viewModelScope.launch {
         repository.addDrinkType(label)?.let(onAdded)
+    }
+
+    fun updateDrinkType(id: String, label: String?, iconKey: String, tintArgb: Int?) = viewModelScope.launch {
+        repository.updateDrinkType(id, label, iconKey, tintArgb)
     }
 
     fun deleteEvent(id: Long) = viewModelScope.launch { repository.deleteEvent(id) }
@@ -136,7 +146,17 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectDate(date: LocalDate) = _state.update { it.copy(selectedDate = date) }
 
-    fun refreshPermissions() = _state.update { it.copy(permissions = repository.permissions()) }
+    fun refreshPermissions() {
+        _state.update { it.copy(permissions = repository.permissions()) }
+        // 刚在系统页里同意位置授权时，天气要顺着这次回前台一起补上。
+        viewModelScope.launch { refreshWeather() }
+    }
+
+    /** 拉取失败时保留上一次天气，避免问候语轮播突然少一行。 */
+    suspend fun refreshWeather() {
+        val latest = weatherClient.current() ?: return
+        _state.update { it.copy(weather = latest) }
+    }
 
     fun consumeMessage() = _state.update { it.copy(message = null) }
 

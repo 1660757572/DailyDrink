@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,7 @@ import com.aquaday.app.R
 import com.aquaday.app.ui.aquaPrimaryActionColors
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.ui.asClock
+import com.aquaday.app.ui.DrinkIcons
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
@@ -57,12 +59,15 @@ fun AquaAddSheet(
     dark: Boolean,
     onDismiss: () -> Unit,
     onCreateType: (String) -> Unit,
+    onEditType: (DrinkType) -> Unit,
     onConfirm: (amountMl: Int, type: DrinkType, at: LocalDateTime) -> Unit,
 ) {
     val now = remember { LocalDateTime.now() }
     val maxMinutes = now.hour * 60 + now.minute
     var amount by remember(defaultCupMl) { mutableFloatStateOf(defaultCupMl.coerceIn(50, 1500).toFloat()) }
-    var type by remember { mutableStateOf(types.firstOrNull { it.id == DrinkType.WATER.id } ?: DrinkType.WATER) }
+    // 只记 id，编辑过图标或名称后当前选中项仍能跟着快照里的最新对象刷新。
+    var selectedId by remember { mutableStateOf(DrinkType.WATER.id) }
+    val type = types.firstOrNull { it.id == selectedId } ?: DrinkType.WATER
     var minutes by remember { mutableIntStateOf(maxMinutes) }
     var typeDialog by remember { mutableStateOf(false) }
     var timeDialog by remember { mutableStateOf(false) }
@@ -76,7 +81,7 @@ fun AquaAddSheet(
     LaunchedEffect(types, pendingLabel) {
         val wanted = pendingLabel ?: return@LaunchedEffect
         types.firstOrNull { it.label == wanted }?.let {
-            type = it
+            selectedId = it.id
             pendingLabel = null
         }
     }
@@ -141,8 +146,12 @@ fun AquaAddSheet(
                         types.forEach { option ->
                             AquaChip(
                                 text = option.label,
-                                selected = option == type,
-                                onClick = { type = option },
+                                selected = option.id == selectedId,
+                                onClick = { selectedId = option.id },
+                                leading = DrinkIcons.vector(option.iconKey),
+                                // 只在自定义色时着色；跟随强调色时交给芯片自身的选中配色。
+                                leadingTint = option.tintArgb?.let { Color(it) },
+                                onLongClick = { onEditType(option) },
                             )
                         }
                         AquaChip(

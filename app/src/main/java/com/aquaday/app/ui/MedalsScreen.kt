@@ -53,6 +53,7 @@ import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaLinearProgress
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.aquaday.app.ui.components.AquaTileShape
+import com.aquaday.app.ui.components.MenuBackdropWhileOpen
 import com.aquaday.app.ui.components.bleedHorizontal
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.chip.ChipTabButton
@@ -309,6 +310,7 @@ private fun CouiCategoryTabs(
     val menuItems = remember(labels, selected) {
         labels.mapIndexed { index, label -> CouiMenuItem(index, label, selected = index == selected) }
     }
+    MenuBackdropWhileOpen(menuOpen)
     Menu(
         expanded = menuOpen,
         onDismissRequest = { menuOpen = false },

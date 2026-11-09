@@ -33,6 +33,7 @@ private object AquaKeys {
     val VIBRATE_ON = intPreferencesKey("vibrate_on")
     val LAST_REMINDER = longPreferencesKey("last_reminder_at")
     val CUSTOM_TYPES = stringPreferencesKey("custom_types")
+    val TYPE_STYLES = stringPreferencesKey("type_styles")
     val DEFAULT_CUP = intPreferencesKey("default_cup_ml")
     val DYNAMIC_COLOR = intPreferencesKey("dynamic_color")
     val COLOR_STYLE = intPreferencesKey("color_style")
@@ -63,7 +64,7 @@ class HydrationStore(context: Context) {
         }
         .map { prefs ->
             val customTypes = decodeTypes(prefs[AquaKeys.CUSTOM_TYPES].orEmpty())
-            val types = DrinkType.builtins + customTypes
+            val types = styledBuiltins(decodeTypeStyles(prefs[AquaKeys.TYPE_STYLES].orEmpty())) + customTypes
             AquaSnapshot(
                 events = decodeEvents(prefs[AquaKeys.EVENTS].orEmpty(), types),
                 goalMl = prefs[AquaKeys.GOAL] ?: DEFAULT_GOAL_ML,
@@ -123,6 +124,28 @@ class HydrationStore(context: Context) {
             }
         }
         return result
+    }
+
+    /** 长按编辑饮品标签的图标、颜色与名称：自定义类型改原行，内置类型写覆盖表。 */
+    suspend fun updateDrinkType(id: String, label: String?, iconKey: String, tintArgb: Int?) {
+        store.edit { prefs ->
+            val custom = decodeTypes(prefs[AquaKeys.CUSTOM_TYPES].orEmpty())
+            if (custom.any { it.id == id }) {
+                prefs[AquaKeys.CUSTOM_TYPES] = encodeTypes(
+                    custom.map {
+                        if (it.id != id) it else it.copy(
+                            label = label?.trim()?.takeIf { l -> l.isNotEmpty() } ?: it.label,
+                            iconKey = iconKey,
+                            tintArgb = tintArgb,
+                        )
+                    },
+                )
+            } else if (DrinkType.builtins.any { it.id == id }) {
+                val styles = decodeTypeStyles(prefs[AquaKeys.TYPE_STYLES].orEmpty()).toMutableMap()
+                styles[id] = TypeStyle(iconKey, tintArgb, label?.trim()?.takeIf { l -> l.isNotEmpty() })
+                prefs[AquaKeys.TYPE_STYLES] = encodeTypeStyles(styles)
+            }
+        }
     }
 
     suspend fun deleteEvent(id: Long) {
@@ -231,11 +254,23 @@ class HydrationStore(context: Context) {
 
     private suspend fun mutateEvents(transform: (List<DrinkEvent>) -> List<DrinkEvent>) {
         store.edit { prefs ->
-            val types = DrinkType.builtins + decodeTypes(prefs[AquaKeys.CUSTOM_TYPES].orEmpty())
+            val types = styledBuiltins(decodeTypeStyles(prefs[AquaKeys.TYPE_STYLES].orEmpty())) +
+                decodeTypes(prefs[AquaKeys.CUSTOM_TYPES].orEmpty())
             val next = transform(decodeEvents(prefs[AquaKeys.EVENTS].orEmpty(), types))
             prefs[AquaKeys.EVENTS] = encodeEvents(next.sortedBy { it.at })
         }
     }
+
+    /** 内置类型的外观覆盖（图标/颜色/名称）合并回默认定义。 */
+    private fun styledBuiltins(styles: Map<String, TypeStyle>): List<DrinkType> =
+        DrinkType.builtins.map { builtin ->
+            val style = styles[builtin.id]
+            if (style == null) builtin else builtin.copy(
+                label = style.label ?: builtin.label,
+                iconKey = style.iconKey,
+                tintArgb = style.tintArgb,
+            )
+        }
 
     private fun settingsOf(prefs: Preferences) = ReminderSettings(
         enabled = (prefs[AquaKeys.REMINDER_ON] ?: 1) == 1,
@@ -276,7 +311,10 @@ class HydrationStore(context: Context) {
             .toList()
 
     private fun encodeTypes(types: List<DrinkType>): String =
-        types.joinToString("\n") { "${it.id};${it.label};${it.factor}" }
+        types.joinToString("\n") {
+            val tint = it.tintArgb?.toString() ?: "-"
+            "${it.id};${it.label};${it.factor};${it.iconKey};$tint"
+        }
 
     private fun decodeTypes(raw: String): List<DrinkType> =
         raw.lineSequence()
@@ -289,10 +327,32 @@ class HydrationStore(context: Context) {
                         label = parts[1],
                         factor = parts[2].toDouble(),
                         builtin = false,
+                        iconKey = parts.getOrNull(3).orEmpty().ifBlank { "drop" },
+                        tintArgb = parts.getOrNull(4)?.toIntOrNull(),
                     )
                 }.getOrNull()
             }
             .toList()
+
+    private fun encodeTypeStyles(styles: Map<String, TypeStyle>): String =
+        styles.entries.joinToString("\n") { (id, style) ->
+            "$id;${style.iconKey};${style.tintArgb ?: "-"};${style.label ?: "-"}"
+        }
+
+    private fun decodeTypeStyles(raw: String): Map<String, TypeStyle> =
+        raw.lineSequence()
+            .filter { it.isNotBlank() }
+            .mapNotNull { line ->
+                val parts = line.split(';')
+                runCatching {
+                    parts[0] to TypeStyle(
+                        iconKey = parts.getOrNull(1).orEmpty().ifBlank { "drop" },
+                        tintArgb = parts.getOrNull(2)?.toIntOrNull(),
+                        label = parts.getOrNull(3)?.takeIf { it != "-" && it.isNotBlank() },
+                    )
+                }.getOrNull()
+            }
+            .toMap()
 
     private fun encodeUnlocked(map: Map<String, Long>): String =
         map.entries.joinToString("\n") { "${it.key};${it.value}" }
@@ -310,6 +370,8 @@ class HydrationStore(context: Context) {
         const val TAG = "HydrationStore"
     }
 }
+
+private data class TypeStyle(val iconKey: String, val tintArgb: Int?, val label: String?)
 
 const val DEFAULT_GOAL_ML = 2000
 const val DEFAULT_INTERVAL_MIN = 60

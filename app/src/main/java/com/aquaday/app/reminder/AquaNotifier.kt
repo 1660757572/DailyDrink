@@ -90,6 +90,7 @@ class AquaNotifier(private val context: Context) {
         val settings = metrics.snapshot.settings
         val goal = metrics.snapshot.goalMl
         val total = metrics.today.totalMl
+        val percent = progressPercent(total, goal)
         val title = if (metrics.today.reached) {
             context.getString(R.string.live_reached, total)
         } else {
@@ -98,7 +99,7 @@ class AquaNotifier(private val context: Context) {
         val text = context.getString(R.string.live_body, total, goal, metrics.streakDays, metrics.eventCount)
         val counting = settings.enabled && !metrics.today.reached
         val builder = Notification.Builder(context, AquaChannels.LIVE)
-            .setSmallIcon(R.drawable.ic_aqua_stat)
+            .setSmallIcon(progressIcon(percent))
             .setContentTitle(title)
             .setContentText(text)
             .setNumber(total)
@@ -112,12 +113,12 @@ class AquaNotifier(private val context: Context) {
             .setShowWhen(true)
             .setUsesChronometer(counting)
             .setChronometerCountDown(counting)
-            .addAction(confirmAction(DrinkType.WATER, settings.defaultCupMl))
-            .addAction(snoozeAction())
+            .addAction(confirmAction(DrinkType.WATER, settings.defaultCupMl, progressIcon(percent)))
+            .addAction(snoozeAction(progressIcon(percent)))
         // ColorOS 16 的流体云读取原生 Live Updates；部分 36 构建未编入
         // ProgressStyle/提升常驻通知，失败时退回普通进度通知而不是让进程崩溃。
         val liveUpdates = Build.VERSION.SDK_INT >= 36 && runCatching {
-            builder.setStyle(progressStyle(total, goal))
+            builder.setStyle(progressStyle(total, goal, percent))
         }.isSuccess
         if (liveUpdates) {
             if (supportsPromotedOngoing) builder.setRequestPromotedOngoing(true)
@@ -143,36 +144,45 @@ class AquaNotifier(private val context: Context) {
      * 胶囊与锁屏卡片都读取这里的分段、追踪图标和颜色。
      */
     @RequiresApi(36)
-    private fun progressStyle(totalMl: Int, goalMl: Int): Notification.ProgressStyle {
-        val percent = if (goalMl <= 0) 0 else (totalMl * 100 / goalMl).coerceIn(0, 100)
+    private fun progressStyle(totalMl: Int, goalMl: Int, percent: Int): Notification.ProgressStyle {
         val style = Notification.ProgressStyle()
             .setProgress(percent)
-            .setProgressTrackerIcon(Icon.createWithResource(context, R.drawable.ic_aqua_stat))
+            .setProgressTrackerIcon(Icon.createWithResource(context, progressIcon(percent)))
         SEGMENT_COLORS.forEachIndexed { index, color ->
             style.addProgressSegment(Notification.ProgressStyle.Segment(25).setId(index).setColor(color))
         }
         return style
     }
 
-    private fun confirmAction(type: DrinkType, amountMl: Int): Notification.Action {
+    /** 水杯里的水面跟着进度走：没到一半是空杯，过半是半杯，达标是满杯。 */
+    private fun progressIcon(percent: Int): Int = when {
+        percent >= FULL_PERCENT -> R.drawable.ic_aqua_stat_full
+        percent >= HALF_PERCENT -> R.drawable.ic_aqua_stat_medium
+        else -> R.drawable.ic_aqua_stat_low
+    }
+
+    private fun progressPercent(totalMl: Int, goalMl: Int): Int =
+        if (goalMl <= 0) 0 else (totalMl * 100 / goalMl).coerceIn(0, 100)
+
+    private fun confirmAction(type: DrinkType, amountMl: Int, iconRes: Int = R.drawable.ic_aqua_stat): Notification.Action {
         val intent = Intent(context, ReminderActionReceiver::class.java)
             .setAction(ReminderActionReceiver.ACTION_CONFIRM)
             .putExtra(ReminderActionReceiver.EXTRA_AMOUNT, amountMl)
             .putExtra(ReminderActionReceiver.EXTRA_TYPE_ID, type.id)
         val label = context.getString(R.string.notif_confirm, amountMl)
         return Notification.Action.Builder(
-            Icon.createWithResource(context, R.drawable.ic_aqua_stat),
+            Icon.createWithResource(context, iconRes),
             label,
             broadcast(ReminderActionReceiver.ACTION_CONFIRM, amountMl, intent),
         ).build()
     }
 
-    private fun snoozeAction(): Notification.Action {
+    private fun snoozeAction(iconRes: Int = R.drawable.ic_aqua_stat): Notification.Action {
         val intent = Intent(context, ReminderActionReceiver::class.java)
             .setAction(ReminderActionReceiver.ACTION_SNOOZE)
             .putExtra(ReminderActionReceiver.EXTRA_MINUTES, SNOOZE_MINUTES)
         return Notification.Action.Builder(
-            Icon.createWithResource(context, R.drawable.ic_aqua_stat),
+            Icon.createWithResource(context, iconRes),
             context.getString(R.string.notif_snooze, SNOOZE_MINUTES),
             broadcast(ReminderActionReceiver.ACTION_SNOOZE, SNOOZE_MINUTES, intent),
         ).build()
@@ -214,6 +224,8 @@ class AquaNotifier(private val context: Context) {
         const val REQUEST_BASE = 5000
         const val REQUEST_OPEN = 5900
         const val SNOOZE_MINUTES = 10
+        const val HALF_PERCENT = 50
+        const val FULL_PERCENT = 100
         val ACCENT = Color.rgb(0, 128, 255)
         val SEGMENT_COLORS = intArrayOf(
             Color.rgb(98, 212, 255),

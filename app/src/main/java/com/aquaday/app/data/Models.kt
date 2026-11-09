@@ -6,24 +6,27 @@ import java.time.LocalDateTime
 /**
  * 饮品类型；补水系数用于折算实际有效补水量。
  * 自定义类型由用户命名，没有可靠的折算依据，按 100% 记。
+ * iconKey 指向 DrinkIcons 目录，tintArgb 为自定义图标颜色（null 表示跟随强调色）。
  */
 data class DrinkType(
     val id: String,
     val label: String,
     val factor: Double,
     val builtin: Boolean = false,
+    val iconKey: String = "drop",
+    val tintArgb: Int? = null,
 ) {
     companion object {
         // 顺序即旧版本的 ordinal，解码历史记录时依赖它。
-        val WATER = DrinkType("water", "白水", 1.0, true)
-        val TEA = DrinkType("tea", "淡茶", 0.9, true)
-        val MILK = DrinkType("milk", "牛奶", 0.8, true)
-        val SOUP = DrinkType("soup", "汤品", 0.8, true)
-        val COFFEE = DrinkType("coffee", "咖啡", 0.6, true)
-        val SODA = DrinkType("soda", "饮料", 0.5, true)
+        val WATER = DrinkType("water", "白水", 1.0, true, iconKey = "water")
+        val TEA = DrinkType("tea", "淡茶", 0.9, true, iconKey = "cafe")
+        val MILK = DrinkType("milk", "牛奶", 0.8, true, iconKey = "room")
+        val SOUP = DrinkType("soup", "汤品", 0.8, true, iconKey = "soup")
+        val COFFEE = DrinkType("coffee", "咖啡", 0.6, true, iconKey = "coffee")
+        val SODA = DrinkType("soda", "饮料", 0.5, true, iconKey = "drink")
         val builtins = listOf(WATER, TEA, MILK, SOUP, COFFEE, SODA)
 
-        fun custom(label: String, id: String): DrinkType = DrinkType(id, label, 1.0, false)
+        fun custom(label: String, id: String): DrinkType = DrinkType(id, label, 1.0, false, iconKey = "drop")
     }
 }
 

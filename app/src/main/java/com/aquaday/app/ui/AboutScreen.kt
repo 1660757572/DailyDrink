@@ -27,10 +27,12 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -113,6 +115,13 @@ fun AboutScreen(backdrop: CouiBackdrop, dialogBackdrop: CouiBackdrop, dark: Bool
                 title = stringResource(R.string.about_help_style_title),
                 body = stringResource(R.string.about_help_style_body),
             )
+            AquaDivider()
+            HelpRow(
+                icon = Icons.Filled.WaterDrop,
+                tint = TintPermission,
+                title = stringResource(R.string.about_help_filter_title),
+                body = stringResource(R.string.about_help_filter_body),
+            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -125,6 +134,10 @@ fun AboutScreen(backdrop: CouiBackdrop, dialogBackdrop: CouiBackdrop, dark: Bool
             StackRow(stringResource(R.string.about_stack_data_label), stringResource(R.string.about_stack_data))
             AquaDivider()
             StackRow(stringResource(R.string.about_stack_alarm_label), stringResource(R.string.about_stack_alarm))
+            AquaDivider()
+            StackRow(stringResource(R.string.about_stack_weather_label), stringResource(R.string.about_stack_weather))
+            AquaDivider()
+            StackRow(stringResource(R.string.about_stack_icons_label), stringResource(R.string.about_stack_icons))
         }
 
         Spacer(Modifier.height(16.dp))
@@ -253,7 +266,7 @@ private fun Hero(versionName: String, backdrop: CouiBackdrop, dark: Boolean) {
         )
         Spacer(Modifier.height(18.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            CircleAction(Icons.Filled.Code, stringResource(R.string.about_open_repo), backdrop, dark) {
+            CircleAction(Icons.Filled.Language, stringResource(R.string.about_open_repo), backdrop, dark) {
                 uriHandler.openUri(REPO_URL)
             }
             CircleAction(Icons.Filled.BugReport, stringResource(R.string.about_feedback), backdrop, dark) {

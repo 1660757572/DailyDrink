@@ -55,6 +55,8 @@
     <string name="home_goal_line">目标 %1$d ml\n完成 %2$d%%</string>
 
     <string name="calendar_title">达标日历</string>
+    <string name="calendar_section_records">饮水记录</string>
+    <string name="calendar_records_empty">这一天还没有该饮品的记录</string>
     <string name="calendar_summary">%1$d / %2$d 天达标 · 本月 %3$d ml</string>
     <string name="calendar_legend_reached">达标</string>
     <string name="calendar_legend_partial">未达标</string>
@@ -166,6 +168,21 @@
     <string name="setting_exact_alarm_granted">精确闹钟权限已开启</string>
     <string name="setting_exact_alarm_granted_summary">提醒按设定时间准点触发</string>
     <string name="permission_granted">已开启</string>
+    <string name="setting_location_missing">位置信息权限未开启</string>
+    <string name="setting_location_missing_summary">开启后首页能结合当地天气提醒补水</string>
+    <string name="setting_location_granted">位置信息权限已开启</string>
+    <string name="setting_location_granted_summary">首页问候语会轮播当地天气与补水提示</string>
+
+    <string name="weather_clear">晴</string>
+    <string name="weather_cloudy">多云</string>
+    <string name="weather_fog">有雾</string>
+    <string name="weather_drizzle">毛毛雨</string>
+    <string name="weather_rain">下雨</string>
+    <string name="weather_snow">下雪</string>
+    <string name="weather_thunder">雷阵雨</string>
+    <string name="home_greeting_weather">%1$s %2$d℃ · 湿度 %3$d%%</string>
+    <string name="home_hint_dry">空气干燥，记得多喝几杯</string>
+    <string name="home_hint_hot">天气炎热，出汗多更要补水</string>
     <string name="setting_about">关于</string>
     <string name="setting_about_summary">版本、技术栈与开源许可</string>
 
@@ -175,13 +192,15 @@
     <string name="about_section_stack">技术栈</string>
     <string name="about_section_info">应用信息</string>
     <string name="about_help_log_title">记录喝水</string>
-    <string name="about_help_log_body">首页的快捷容量一点即记，「喝一杯」按默认一杯容量直接记录，右下角加号可以改容量、饮品和时间。</string>
+    <string name="about_help_log_body">首页的快捷容量一点即记，「喝一杯」按默认一杯容量直接记录，右下角加号可以改容量、饮品和时间。首页与日历的记录都支持按饮品分类筛选，长按分类标签能改名称、图标和颜色。</string>
     <string name="about_help_reminder_title">定时提醒</string>
-    <string name="about_help_reminder_body">按间隔与活跃时段提醒，通知里可以直接确认或稍后提醒。</string>
+    <string name="about_help_reminder_body">按间隔与活跃时段提醒，通知里可以直接确认或稍后提醒。位置信息只读取一次系统缓存坐标，用来结合当地天气判断是否需要多补水。</string>
     <string name="about_help_progress_title">成就与日历</string>
-    <string name="about_help_progress_body">每笔记录都会累计进度，日历能回看每天是否达标。</string>
+    <string name="about_help_progress_body">每笔记录都会累计进度，日历能回看每天是否达标，实时活动的水杯图标也会随进度换成空杯、半杯或满杯。</string>
     <string name="about_help_style_title">个性化</string>
-    <string name="about_help_style_body">在「我的 → 个人信息 / 外观」里改昵称头像、主题色与背景。</string>
+    <string name="about_help_style_body">在「我的 → 个人信息 / 外观」里改昵称头像、主题色、背景与容器浓淡，饮品类型还能换成自己的图标。</string>
+    <string name="about_help_filter_title">分类与天气</string>
+    <string name="about_help_filter_body">首页和日历的记录上方按饮品分类筛选，右上角按钮可以快速跳转分类；授权位置后，问候语下方还会轮播当地天气与补水提示。</string>
     <string name="about_stack_ui_label">界面</string>
     <string name="about_stack_ui">Jetpack Compose · COUI-Kit</string>
     <string name="about_stack_lang_label">语言</string>
@@ -190,6 +209,10 @@
     <string name="about_stack_data">DataStore Preferences</string>
     <string name="about_stack_alarm_label">提醒</string>
     <string name="about_stack_alarm">AlarmManager · WorkManager</string>
+    <string name="about_stack_weather_label">天气</string>
+    <string name="about_stack_weather">Open-Meteo · 缓存定位</string>
+    <string name="about_stack_icons_label">图标</string>
+    <string name="about_stack_icons">Material Symbols · Vector Drawable</string>
     <string name="setting_about_version">版本信息</string>
     <string name="about_version_line">%1$s（versionCode %2$d）</string>
     <string name="about_repo">GitHub 仓库</string>
@@ -202,8 +225,8 @@
     <string name="about_license_summary">本项目以 MIT License 开源</string>
     <string name="about_license_body">MIT License\n\nCopyright (c) 2026 KUMAKI\n\n特此免费授予任何获得本软件及相关文档文件副本的人不受限制地处理本软件的权利，包括但不限于使用、复制、修改、合并、发布、分发、再许可和/或销售本软件副本的权利，并允许获得本软件的人在符合下列条件的前提下这样做：\n\n上述版权声明和本许可声明应包含在本软件的所有副本或主要部分中。\n\n本软件按「原样」提供，不附带任何明示或暗示的担保，包括但不限于适销性、特定用途适用性和非侵权性的担保。在任何情况下，作者或版权持有人均不对任何索赔、损害或其他责任负责，无论是在合同诉讼、侵权行为还是其他方面，由本软件或本软件的使用或其他交易引起、产生或与之相关。</string>
     <string name="about_third_party">第三方开源许可</string>
-    <string name="about_third_party_summary">AndroidX、Compose、Kotlin 等组件</string>
-    <string name="about_third_party_body">AndroidX / Jetpack Compose —— Apache License 2.0\nKotlin 与 kotlinx.coroutines —— Apache License 2.0\nMaterial Icons —— Apache License 2.0\nCOUI-Kit —— 界面组件库，遵循其上游仓库声明的许可\n\n以上组件均按其各自许可条款分发，完整文本可在对应项目仓库中查阅。</string>
+    <string name="about_third_party_summary">AndroidX、Compose、Kotlin、Material Symbols、Open-Meteo 等</string>
+    <string name="about_third_party_body">AndroidX / Jetpack Compose —— Apache License 2.0\nKotlin 与 kotlinx.coroutines —— Apache License 2.0\nMaterial Icons / Material Symbols —— Apache License 2.0\nCOUI-Kit —— 界面组件库，遵循其上游仓库声明的许可\nOpen-Meteo —— 天气数据来自 open-meteo.com，按 CC BY 4.0 提供\n\n以上组件与数据均按其各自许可条款分发，完整文本可在对应项目仓库或官网查阅。</string>
     <string name="about_footer">© 2026 KUMAKI · MIT License</string>
 
     <string name="renderer_error">浮动材质渲染器不可用：%1$s</string>
@@ -223,6 +246,14 @@
     <string name="dialog_new_type">新增饮品</string>
     <string name="dialog_new_type_hint">自定义饮品按 100% 补水计算</string>
     <string name="dialog_new_type_placeholder">例如：柠檬水</string>
+    <string name="drink_filter_menu">筛选饮品</string>
+    <string name="drink_edit_title">编辑饮品</string>
+    <string name="drink_edit_hint">改名称、图标和颜色，保存后立刻生效</string>
+    <string name="drink_edit_name">名称</string>
+    <string name="drink_edit_icon">图标</string>
+    <string name="drink_edit_tint">图标颜色</string>
+    <string name="drink_tint_follow">跟随强调色</string>
+    <string name="drink_edit_empty_name">名称不能为空</string>
 
     <string name="home_reached_flag">已达成</string>
     <string name="home_reminder_status">提醒状态</string>
@@ -275,7 +306,7 @@
     <string name="onboarding_reminder_title">安排喝水提醒</string>
     <string name="onboarding_reminder_body">在活跃时段内按间隔提醒补水，今日达标后自动安静下来。</string>
     <string name="onboarding_permission_title">开启必要权限</string>
-    <string name="onboarding_permission_body">通知用于喝水提醒与实时活动，精确闹钟保证提醒准时送达。</string>
+    <string name="onboarding_permission_body">通知用于喝水提醒与实时活动，精确闹钟保证提醒准时送达，位置信息用来结合当地天气提醒补水。</string>
     <string name="onboarding_permissions_ready">权限已就绪</string>
     <string name="onboarding_page_indicator">第 %1$d 步，共 %2$d 步</string>
     <string name="onboarding_summary_goal">每日目标 %1$d ml</string>

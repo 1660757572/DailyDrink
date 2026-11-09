@@ -66,6 +66,7 @@ import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.aquaday.app.ui.components.AquaSliderRow
 import com.aquaday.app.ui.components.AquaTileShape
+import com.aquaday.app.ui.components.MenuBackdropWhileOpen
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.chip.ChipTab
 import com.itos.coui.dialog.CouiDialogAction
@@ -127,6 +128,7 @@ fun AppearanceScreen(
                 )
             },
         )
+        MenuBackdropWhileOpen(themeMenuOpen)
         Menu(
             expanded = themeMenuOpen,
             onDismissRequest = { themeMenuOpen = false },

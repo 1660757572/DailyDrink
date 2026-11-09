@@ -6,6 +6,7 @@ import androidx.activity.compose.PredictiveBackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
@@ -69,6 +70,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -93,6 +95,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,9 +109,14 @@ import com.aquaday.app.data.DEFAULT_SCRIM
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.data.ThemeMode
 import com.aquaday.app.ui.components.AquaAddSheet
+import com.aquaday.app.ui.components.DrinkTypeEditorDialog
+import com.aquaday.app.ui.components.LocalMenuBackdropGate
+import com.aquaday.app.ui.components.MenuBackdropGate
+import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.effect.CouiFloatingRenderer
+import com.itos.coui.menu.ProvideCouiMenuBackdrop
 import com.itos.coui.navigation.CouiNavigationItem
 import com.itos.coui.navigation.NavigationBar
 import com.itos.coui.scroll.couiVerticalScroll
@@ -157,16 +165,29 @@ fun AquaApp(viewModel: AquaViewModel = viewModel()) {
             isAppearanceLightNavigationBars = !dark
         }
     }
-    AquaTheme(
-        dark = dark,
-        colorStyle = snapshot?.colorStyle ?: ColorStyle.Default,
-        customAccent = snapshot?.customAccent,
-        containerOpacity = snapshot?.containerOpacity ?: 1f,
-    ) {
-        when {
-            snapshot == null -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
-            !snapshot.onboarded -> OnboardingScreen(state, viewModel)
-            else -> AquaShell(state, viewModel, dark)
+    // COUI 菜单的背景材质只能由 ProvideCouiMenuBackdrop 注入（取样 CompositionLocal 是库内私有的）。
+    // 采样源只在菜单展开期间挂上，避免常驻的第三层全屏离屏录制增加每帧开销。
+    val menuGate = remember { MenuBackdropGate() }
+    CompositionLocalProvider(LocalMenuBackdropGate provides menuGate) {
+        ProvideCouiMenuBackdrop(isolateContent = false) { menuSource ->
+            Box(
+                Modifier.fillMaxSize().then(
+                    if (menuGate.openCount > 0) menuSource else Modifier,
+                ),
+            ) {
+                AquaTheme(
+                    dark = dark,
+                    colorStyle = snapshot?.colorStyle ?: ColorStyle.Default,
+                    customAccent = snapshot?.customAccent,
+                    containerOpacity = snapshot?.containerOpacity ?: 1f,
+                ) {
+                    when {
+                        snapshot == null -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+                        !snapshot.onboarded -> OnboardingScreen(state, viewModel)
+                        else -> AquaShell(state, viewModel, dark)
+                    }
+                }
+            }
         }
     }
 }
@@ -182,6 +203,8 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
     var medalDetail by rememberSaveable { mutableStateOf(false) }
     var medalStart by rememberSaveable { mutableIntStateOf(0) }
     var addOpen by rememberSaveable { mutableStateOf(false) }
+    // 长按饮品标签打开的编辑弹窗，按 id 取最新快照，编辑后内容跟着刷新。
+    var editorTypeId by rememberSaveable { mutableStateOf<String?>(null) }
     // 徽章墙两列网格开关；底栏左附件只在成就页出现。
     var medalGrid by rememberSaveable { mutableStateOf(false) }
     val page = AquaPage.entries.getOrElse(pageIndex) { AquaPage.Home }
@@ -336,8 +359,15 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                     backdrop = pageBackdrop,
                                     dialogBackdrop = backdrop,
                                     dark = dark,
+                                    onEditType = { editorTypeId = it.id },
                                 )
-                                AquaPage.Calendar -> CalendarScreen(state, viewModel)
+                                AquaPage.Calendar -> CalendarScreen(
+                                    state,
+                                    viewModel,
+                                    backdrop = pageBackdrop,
+                                    dark = dark,
+                                    onEditType = { editorTypeId = it.id },
+                                )
                                 AquaPage.Medals -> MedalsScreen(
                                     state,
                                     backdrop = pageBackdrop,
@@ -494,11 +524,31 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                     dark = dark,
                     onDismiss = { addOpen = false },
                     onCreateType = { label -> viewModel.addDrinkType(label) },
+                    onEditType = { editorTypeId = it.id },
                     onConfirm = { amount, type, at ->
                         viewModel.addDrink(amount, type, at)
                         addOpen = false
                     },
                 )
+            }
+
+            editorTypeId?.let { id ->
+                val editing = state.metrics?.snapshot?.drinkTypes?.firstOrNull { it.id == id }
+                if (editing == null) {
+                    // 类型可能被清空数据后移除，直接关掉弹窗避免停留在空引用上。
+                    LaunchedEffect(id) { editorTypeId = null }
+                } else {
+                    DrinkTypeEditorDialog(
+                        type = editing,
+                        backdrop = backdrop,
+                        dark = dark,
+                        onDismiss = { editorTypeId = null },
+                        onSave = { label, iconKey, tint ->
+                            viewModel.updateDrinkType(editing.id, label, iconKey, tint)
+                            editorTypeId = null
+                        },
+                    )
+                }
             }
         }
     }
@@ -626,13 +676,33 @@ private fun AquaGreeting(state: AquaUiState, collapse: Float) {
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.home_greeting_days, metrics.recordedDays),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        // 第二行在记录天数和当地天气之间轮播，取不到天气时退回只显示天数。
+        val daysLine = stringResource(R.string.home_greeting_days, metrics.recordedDays)
+        val weatherLines = state.weather?.let { weatherHintLines(it) }
+        val hints = if (weatherLines == null) listOf(daysLine) else buildList {
+            add(daysLine)
+            addAll(weatherLines)
+        }
+        var hintIndex by remember(hints) { mutableIntStateOf(0) }
+        LaunchedEffect(hints) {
+            while (hints.size > 1) {
+                delay(GREETING_HINT_MS)
+                hintIndex = (hintIndex + 1) % hints.size
+            }
+        }
+        Crossfade(targetState = hints[hintIndex % hints.size], label = "greetingHint") { line ->
+            Text(
+                text = line,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
+
+private const val GREETING_HINT_MS = 4200L
 
 /** 折叠顶栏：页面顶部是随内容滚动的大标题，滚出后由顶栏内的小标题接替。 */
 @Composable

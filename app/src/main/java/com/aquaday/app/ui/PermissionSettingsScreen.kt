@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.MaterialTheme
@@ -34,9 +35,13 @@ fun PermissionSettingsScreen(state: AquaUiState, viewModel: AquaViewModel) {
     val systemSettingsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         viewModel.refreshPermissions()
     }
+    val locationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        viewModel.refreshPermissions()
+    }
 
     val notifications = state.permissions.notifications
     val exactAlarms = state.permissions.exactAlarms
+    val location = state.permissions.location
     AquaCard {
         Column(Modifier.padding(vertical = 2.dp)) {
             AquaRow(
@@ -81,6 +86,21 @@ fun PermissionSettingsScreen(state: AquaUiState, viewModel: AquaViewModel) {
                     }
                 } },
                 trailing = { PermissionActionText(exactAlarms) },
+            )
+            AquaDivider()
+            AquaRow(
+                title = stringResource(
+                    if (location) R.string.setting_location_granted else R.string.setting_location_missing,
+                ),
+                summary = stringResource(
+                    if (location) R.string.setting_location_granted_summary else R.string.setting_location_missing_summary,
+                ),
+                icon = Icons.Filled.GpsFixed,
+                iconTint = TintSchedule,
+                onClick = if (location) null else { {
+                    locationLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                } },
+                trailing = { PermissionActionText(location) },
             )
         }
     }

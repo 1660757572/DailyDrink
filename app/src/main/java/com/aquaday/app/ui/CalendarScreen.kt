@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
 import com.aquaday.app.data.CalendarCell
+import com.aquaday.app.data.DrinkType
 import com.aquaday.app.data.HydrationMetrics
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaArrowButton
@@ -37,12 +41,19 @@ import com.aquaday.app.ui.components.AquaCardVerticalPadding
 import com.aquaday.app.ui.components.AquaDayBar
 import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaSectionTitle
+import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.theme.CouiTheme
 import java.time.LocalDate
 import java.time.YearMonth
 
 @Composable
-fun CalendarScreen(state: AquaUiState, viewModel: AquaViewModel) {
+fun CalendarScreen(
+    state: AquaUiState,
+    viewModel: AquaViewModel,
+    backdrop: CouiBackdrop,
+    dark: Boolean,
+    onEditType: (DrinkType) -> Unit,
+) {
     val metrics = state.metrics ?: return
     val month = state.month
     val today = LocalDate.now()
@@ -113,12 +124,30 @@ fun CalendarScreen(state: AquaUiState, viewModel: AquaViewModel) {
     Spacer(Modifier.height(16.dp))
     val selected = state.selectedDate
     val record = byDay[selected]
-    AquaSectionTitle(selected.asDayLabel(today))
+    var typeFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    AquaSectionTitle(stringResource(R.string.calendar_section_records))
+    DrinkTypeFilter(
+        types = metrics.snapshot.drinkTypes,
+        selectedId = typeFilter,
+        onSelect = { typeFilter = it },
+        onEditType = onEditType,
+        backdrop = backdrop,
+        dark = dark,
+    )
+    Spacer(Modifier.height(8.dp))
     AquaCard(contentPadding = false) {
-        val events = metrics.snapshot.events.filter { it.at.toLocalDate() == selected }.sortedByDescending { it.at }
-        if (events.isEmpty()) {
+        val allEvents = metrics.snapshot.events.filter { it.at.toLocalDate() == selected }.sortedByDescending { it.at }
+        val events = if (typeFilter == null) allEvents else allEvents.filter { it.type.id == typeFilter }
+        if (allEvents.isEmpty()) {
             Text(
                 text = if (selected.isAfter(today)) stringResource(R.string.calendar_future_hint) else stringResource(R.string.calendar_day_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = AquaCardHorizontalPadding, vertical = 20.dp),
+            )
+        } else if (events.isEmpty()) {
+            Text(
+                text = stringResource(R.string.calendar_records_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = AquaCardHorizontalPadding, vertical = 20.dp),
@@ -139,10 +168,15 @@ fun CalendarScreen(state: AquaUiState, viewModel: AquaViewModel) {
             events.forEachIndexed { index, event ->
                 Row(
                     Modifier.fillMaxWidth()
-                        .padding(horizontal = AquaCardHorizontalPadding, vertical = 10.dp),
+                        .padding(horizontal = AquaCardHorizontalPadding, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Filled.WaterDrop, null, Modifier.size(14.dp), tint = CouiTheme.colorScheme.accent)
+                    Icon(
+                        imageVector = DrinkIcons.vector(event.type.iconKey),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = drinkIconTint(event.type.tintArgb, CouiTheme.colorScheme.accent),
+                    )
                     Spacer(Modifier.size(8.dp))
                     // 时间列固定宽度，让各行饮品名起点一致。
                     Text(

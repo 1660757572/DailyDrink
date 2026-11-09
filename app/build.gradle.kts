@@ -20,8 +20,8 @@ android {
         applicationId = "com.aquaday.app"
         minSdk = 31
         targetSdk = 37
-        versionCode = 10
-        versionName = "1.8.7"
+        versionCode = 11
+        versionName = "1.9.0"
     }
 
     buildFeatures {

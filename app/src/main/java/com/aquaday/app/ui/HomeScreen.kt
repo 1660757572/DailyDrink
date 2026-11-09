@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
 import com.aquaday.app.data.DrinkEvent
+import com.aquaday.app.data.DrinkType
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaCardHorizontalPadding
 import com.aquaday.app.ui.components.AquaChip
@@ -71,13 +73,17 @@ fun HomeScreen(
     backdrop: CouiBackdrop,
     dialogBackdrop: CouiBackdrop,
     dark: Boolean,
+    onEditType: (DrinkType) -> Unit,
 ) {
     val metrics = state.metrics ?: return
     val today = metrics.today
     val goal = metrics.snapshot.goalMl
-    val events = metrics.snapshot.events
+    val allEvents = metrics.snapshot.events
         .filter { it.at.toLocalDate() == today.date }
         .sortedByDescending { it.at }
+    var typeFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    val types = metrics.snapshot.drinkTypes
+    val events = if (typeFilter == null) allEvents else allEvents.filter { it.type.id == typeFilter }
     // 圆环跟随每次记录平滑推进，冷启动时也从 0 长到当前进度。
     val animatedRatio by animateFloatAsState(
         targetValue = today.ratio,
@@ -229,10 +235,26 @@ fun HomeScreen(
 
     Spacer(Modifier.height(18.dp))
     AquaSectionTitle(stringResource(R.string.home_today_log))
+    DrinkTypeFilter(
+        types = types,
+        selectedId = typeFilter,
+        onSelect = { typeFilter = it },
+        onEditType = onEditType,
+        backdrop = backdrop,
+        dark = dark,
+    )
+    Spacer(Modifier.height(8.dp))
     AquaCard(contentPadding = false) {
-        if (events.isEmpty()) {
+        if (allEvents.isEmpty()) {
             Text(
                 text = stringResource(R.string.home_empty_log),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = AquaCardHorizontalPadding, vertical = 20.dp),
+            )
+        } else if (events.isEmpty()) {
+            Text(
+                text = stringResource(R.string.calendar_records_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = AquaCardHorizontalPadding, vertical = 20.dp),
@@ -308,6 +330,13 @@ private fun HomeLogRow(event: DrinkEvent, onDelete: () -> Unit) {
             .padding(start = AquaCardHorizontalPadding, end = 8.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Icon(
+            imageVector = DrinkIcons.vector(event.type.iconKey),
+            contentDescription = null,
+            modifier = Modifier.size(17.dp),
+            tint = drinkIconTint(event.type.tintArgb, CouiTheme.colorScheme.accent),
+        )
+        Spacer(Modifier.width(10.dp))
         // 时间列固定宽度，避免比例字体下各时刻宽度不同把后面的饮品名挤得参差不齐。
         Text(
             text = event.at.asClock(),

@@ -2,6 +2,7 @@ package com.aquaday.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -26,6 +28,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +56,34 @@ val AquaChipShape = RoundedCornerShape(12.dp)
 /** 卡片内边距的唯一来源：所有页面与弹窗内容都以此对齐。 */
 val AquaCardHorizontalPadding = 20.dp
 val AquaCardVerticalPadding = 16.dp
+
+/**
+ * 菜单采样源的开关计数：根节点只在有菜单展开时才挂 couiBackdrop。
+ * 避免菜单未展开时也常驻一层全屏离屏录制，降低每帧绘制开销。
+ */
+class MenuBackdropGate {
+    var openCount by mutableStateOf(0)
+        private set
+
+    fun enter() {
+        openCount++
+    }
+
+    fun exit() {
+        openCount = (openCount - 1).coerceAtLeast(0)
+    }
+}
+
+val LocalMenuBackdropGate = staticCompositionLocalOf { MenuBackdropGate() }
+
+@Composable
+fun MenuBackdropWhileOpen(expanded: Boolean) {
+    val gate = LocalMenuBackdropGate.current
+    DisposableEffect(expanded) {
+        if (expanded) gate.enter()
+        onDispose { if (expanded) gate.exit() }
+    }
+}
 
 @Composable
 fun AquaCard(
@@ -280,6 +315,7 @@ fun AquaArrowButton(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AquaChip(
     text: String,
@@ -287,7 +323,9 @@ fun AquaChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     leading: ImageVector? = null,
+    leadingTint: Color? = null,
     enabled: Boolean = true,
+    onLongClick: (() -> Unit)? = null,
     contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 9.dp),
     maxLines: Int = Int.MAX_VALUE,
 ) {
@@ -297,16 +335,21 @@ fun AquaChip(
         selected -> MaterialTheme.colorScheme.onPrimary
         else -> MaterialTheme.colorScheme.onSurface
     }
+    val clickModifier = when {
+        !enabled -> Modifier
+        onLongClick != null -> Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick)
+        else -> Modifier.clickable(onClick = onClick)
+    }
     Row(
         modifier = modifier
             .clip(AquaChipShape)
             .background(if (selected) accent else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .then(clickModifier)
             .padding(contentPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
     ) {
-        if (leading != null) Icon(leading, null, Modifier.size(16.dp), tint = contentColor)
+        if (leading != null) Icon(leading, null, Modifier.size(16.dp), tint = leadingTint ?: contentColor)
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,

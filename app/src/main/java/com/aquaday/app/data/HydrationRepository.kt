@@ -1,6 +1,8 @@
 package com.aquaday.app.data
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
@@ -14,7 +16,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-data class AquaPermissions(val notifications: Boolean, val exactAlarms: Boolean)
+data class AquaPermissions(
+    val notifications: Boolean,
+    val exactAlarms: Boolean,
+    val location: Boolean = false,
+)
 
 /** 数据出口：任何写入之后统一同步成就、实时活动与提醒闹钟。 */
 class HydrationRepository(private val context: Context) {
@@ -30,6 +36,8 @@ class HydrationRepository(private val context: Context) {
     fun permissions(): AquaPermissions = AquaPermissions(
         notifications = notifier.notificationsEnabled(),
         exactAlarms = scheduler.canScheduleExact(),
+        location = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED,
     )
 
     /** 供界面展示下一次提醒时间；设置关闭时返回 null。 */
@@ -65,6 +73,9 @@ class HydrationRepository(private val context: Context) {
     }
 
     suspend fun addDrinkType(label: String): DrinkType? = store.addDrinkType(label)
+
+    suspend fun updateDrinkType(id: String, label: String?, iconKey: String, tintArgb: Int?) =
+        store.updateDrinkType(id, label, iconKey, tintArgb)
 
     suspend fun deleteEvent(id: Long) = store.deleteEvent(id)
 

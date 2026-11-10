@@ -20,8 +20,8 @@ android {
         applicationId = "com.aquaday.app"
         minSdk = 31
         targetSdk = 37
-        versionCode = 12
-        versionName = "1.10.0"
+        versionCode = 13
+        versionName = "1.11.0"
     }
 
     buildFeatures {
@@ -76,6 +76,7 @@ dependencies {
     // ColorOS 17 视觉组件：悬浮底栏、渐进式模糊顶栏、浮动材质
     implementation(libs.coui)
     implementation(libs.coui.material3)
+    implementation(libs.coui.icons)
 
     debugImplementation(libs.compose.ui.tooling)
 }

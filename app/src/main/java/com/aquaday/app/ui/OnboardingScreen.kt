@@ -77,6 +77,7 @@ import com.aquaday.app.ui.components.AquaSliderRow
 import com.aquaday.app.ui.components.AquaStepperRow
 import com.aquaday.app.ui.components.AquaSwitchRow
 import com.aquaday.app.ui.components.AvatarCropDialog
+import com.itos.coui.icons.CouiIcons
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.scroll.couiVerticalScroll
@@ -314,10 +315,10 @@ private fun ColumnScope.StepHero(step: Int, sizeDp: Int) {
         )
     } else {
         val hero: Pair<ImageVector, Color> = when (step) {
-            1 -> Icons.Filled.Person to TintProfile
+            1 -> CouiIcons.Filled.UserCircle to TintProfile
             2 -> Icons.Filled.Flag to TintWindow
             3 -> Icons.Filled.Alarm to TintReminder
-            else -> Icons.Filled.NotificationsActive to TintPermission
+            else -> CouiIcons.Filled.Bell to TintPermission
         }
         Icon(
             imageVector = hero.first,

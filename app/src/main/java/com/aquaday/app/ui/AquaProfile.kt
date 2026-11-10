@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aquaday.app.R
+import com.itos.coui.icons.CouiIcons
 
 /** 头像为空时用主题渐变底 + 昵称首字兜底，保证任何阶段都有可识别的形象。 */
 @Composable
@@ -66,7 +67,7 @@ fun AquaAvatar(
             )
         } else {
             Icon(
-                imageVector = Icons.Filled.Person,
+                imageVector = CouiIcons.Filled.UserCircle,
                 contentDescription = stringResource(R.string.profile_avatar_description),
                 modifier = Modifier.size(size * 0.52f),
                 tint = Color.White,

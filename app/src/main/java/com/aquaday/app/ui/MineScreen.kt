@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +47,7 @@ import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
 import com.itos.coui.dialog.CouiDialogDefaults
 import com.itos.coui.dialog.Dialog
+import com.itos.coui.icons.CouiIcons
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -178,7 +176,7 @@ fun MineScreen(
                         .count { !it },
                 )
             },
-            icon = Icons.Filled.NotificationsActive,
+            icon = CouiIcons.Filled.Bell,
             iconTint = TintPermission,
             iconModifier = permissionIcon,
             onClick = onOpenPermission,
@@ -188,7 +186,7 @@ fun MineScreen(
         AquaRow(
             title = stringResource(R.string.mine_subpage_appearance),
             summary = appearanceSummary(snapshot.themeMode, snapshot.colorStyle, snapshot.backgroundImage != null),
-            icon = Icons.Filled.DarkMode,
+            icon = CouiIcons.Filled.DarkLight,
             iconTint = TintTheme,
             iconModifier = appearanceIcon,
             onClick = onOpenAppearance,
@@ -217,7 +215,7 @@ fun MineScreen(
         AquaRow(
             title = stringResource(R.string.setting_about),
             summary = stringResource(R.string.setting_about_summary),
-            icon = Icons.Filled.Info,
+            icon = CouiIcons.Filled.BookOpen,
             iconTint = TintAbout,
             iconModifier = aboutIcon,
             onClick = onOpenAbout,

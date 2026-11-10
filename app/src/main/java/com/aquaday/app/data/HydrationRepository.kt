@@ -83,6 +83,8 @@ class HydrationRepository(private val context: Context) {
     suspend fun updateDrinkType(id: String, label: String?, iconKey: String, tintArgb: Int?) =
         store.updateDrinkType(id, label, iconKey, tintArgb)
 
+    suspend fun deleteDrinkType(id: String) = store.deleteDrinkType(id)
+
     suspend fun deleteEvent(id: Long) = store.deleteEvent(id)
 
     suspend fun setGoal(goalMl: Int) = store.setGoal(goalMl)

@@ -33,6 +33,7 @@ import com.aquaday.app.ui.aquaPrimaryActionColors
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.ui.asClock
 import com.aquaday.app.ui.DrinkIcons
+import com.itos.coui.icons.CouiIcons
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
@@ -161,7 +162,7 @@ fun AquaAddSheet(
                                 typeName = TextFieldValue("")
                                 typeDialog = true
                             },
-                            leading = Icons.Filled.Add,
+                            leading = CouiIcons.Filled.Add,
                         )
                     }
                     Text(

@@ -60,6 +60,7 @@ import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
+import com.itos.coui.icons.CouiIcons
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
@@ -103,7 +104,7 @@ fun AboutScreen(backdrop: CouiBackdrop, dialogBackdrop: CouiBackdrop, dark: Bool
             )
             AquaDivider()
             HelpRow(
-                icon = Icons.Filled.EmojiEvents,
+                icon = CouiIcons.Filled.Certificate,
                 tint = TintSchedule,
                 title = stringResource(R.string.about_help_progress_title),
                 body = stringResource(R.string.about_help_progress_body),
@@ -150,7 +151,7 @@ fun AboutScreen(backdrop: CouiBackdrop, dialogBackdrop: CouiBackdrop, dark: Bool
                     versionName,
                     versionCode,
                 ),
-                icon = Icons.Filled.SystemUpdate,
+                icon = CouiIcons.Filled.AppUpdate,
                 iconTint = TintAbout,
             )
             AquaDivider()

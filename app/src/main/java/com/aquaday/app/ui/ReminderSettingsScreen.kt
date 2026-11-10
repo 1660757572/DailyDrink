@@ -26,6 +26,7 @@ import com.aquaday.app.ui.components.AquaSliderRow
 import com.aquaday.app.ui.components.AquaStepperRow
 import com.aquaday.app.ui.components.AquaSwitchRow
 import java.util.Locale
+import com.itos.coui.icons.CouiIcons
 
 @Composable
 fun ReminderSettingsScreen(state: AquaUiState, viewModel: AquaViewModel) {
@@ -105,7 +106,7 @@ fun ReminderSettingsScreen(state: AquaUiState, viewModel: AquaViewModel) {
                 title = stringResource(R.string.setting_sound),
                 summary = stringResource(R.string.setting_sound_summary),
                 checked = settings.soundEnabled,
-                icon = Icons.Filled.VolumeUp,
+                icon = CouiIcons.Filled.Volume,
                 iconTint = TintSound,
                 onCheckedChange = { enabled -> viewModel.updateSettings { it.copy(soundEnabled = enabled) } },
             )

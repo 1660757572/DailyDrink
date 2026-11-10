@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 白色进度块，渲染时用 setColorFilter 换成强调色；level 0..10000 由 setImageLevel 控制长度。 -->
+<clip xmlns:android="http://schemas.android.com/apk/res/android"
+    android:clipOrientation="horizontal"
+    android:gravity="left">
+    <shape android:shape="rectangle">
+        <solid android:color="#FFFFFFFF" />
+        <corners android:radius="3dp" />
+    </shape>
+</clip>

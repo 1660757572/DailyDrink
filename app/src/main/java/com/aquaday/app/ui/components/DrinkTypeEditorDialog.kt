@@ -7,13 +7,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -64,8 +65,9 @@ private val TintSwatches = listOf(
 )
 
 /**
- * 长按饮品标签进入：同一张弹窗里改名称、图标与图标颜色。
- * 内容整体可纵向滚动，键盘弹出时输入框仍能被系统顶到可见区域。
+ * 长按饮品标签进入：同一张弹窗里改名称、图标与图标颜色，自定义类型可删除。
+ * 内容不要自己套 verticalScroll——COUI 弹窗的正文已经是可滚动的 weight 列，
+ * 再叠一层会在测量时拿到无界高度直接崩溃。
  */
 @Composable
 fun DrinkTypeEditorDialog(
@@ -74,10 +76,12 @@ fun DrinkTypeEditorDialog(
     dark: Boolean,
     onDismiss: () -> Unit,
     onSave: (label: String, iconKey: String, tintArgb: Int?) -> Unit,
+    onDelete: () -> Unit,
 ) {
     var name by remember(type.id) { mutableStateOf(TextFieldValue(type.label)) }
     var iconKey by remember(type.id) { mutableStateOf(type.iconKey) }
     var tint by remember(type.id) { mutableStateOf(type.tintArgb) }
+    var deleteArmed by remember(type.id) { mutableStateOf(false) }
     val accent = CouiTheme.colorScheme.accent
     val tintedColor = drinkIconTint(tint, accent)
     val trimmed = name.text.trim()
@@ -101,7 +105,6 @@ fun DrinkTypeEditorDialog(
         Column(
             Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = CouiDialogDefaults.contentPadding)
                 .padding(bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -185,6 +188,46 @@ fun DrinkTypeEditorDialog(
                                     shape = CircleShape,
                                 )
                                 .clickable { tint = if (selected) null else argb },
+                        )
+                    }
+                }
+            }
+            if (type.builtin) {
+                Text(
+                    text = stringResource(R.string.drink_builtin_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(AquaTileShape)
+                            .background(
+                                if (deleteArmed) AquaDanger.copy(alpha = 0.12f)
+                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                            )
+                            .clickable { if (deleteArmed) onDelete() else deleteArmed = true }
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(Icons.Filled.Delete, null, Modifier.size(18.dp), tint = AquaDanger)
+                        Text(
+                            text = stringResource(
+                                if (deleteArmed) R.string.drink_delete_armed else R.string.drink_delete,
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AquaDanger,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (deleteArmed) {
+                        Text(
+                            text = stringResource(R.string.drink_delete_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

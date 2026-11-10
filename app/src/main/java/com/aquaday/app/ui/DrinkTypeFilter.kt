@@ -24,6 +24,7 @@ import com.aquaday.app.data.DrinkType
 import com.aquaday.app.ui.components.AquaChip
 import com.aquaday.app.ui.components.MenuBackdropWhileOpen
 import com.aquaday.app.ui.components.bleedHorizontal
+import com.itos.coui.icons.CouiIcons
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.chip.ChipTabButton
 import com.itos.coui.chip.ChipTabRow
@@ -136,7 +137,7 @@ private fun TypeTabsApi34(
                 dark = dark,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.FilterList,
+                    imageVector = CouiIcons.Filled.ListFilter,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                 )

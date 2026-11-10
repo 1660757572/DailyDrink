@@ -254,6 +254,10 @@
     <string name="drink_edit_tint">图标颜色</string>
     <string name="drink_tint_follow">跟随强调色</string>
     <string name="drink_edit_empty_name">名称不能为空</string>
+    <string name="drink_builtin_hint">内置饮品不可删除，可修改名称、图标与颜色</string>
+    <string name="drink_delete">删除这个饮品</string>
+    <string name="drink_delete_armed">再次点按确认删除</string>
+    <string name="drink_delete_hint">已记录的饮水会保留原名称与图标，删除后仅从饮品选择中移除</string>
 
     <string name="home_reached_flag">已达成</string>
     <string name="home_reminder_status">提醒状态</string>
@@ -322,19 +326,33 @@
     <string name="widget_small_name">水杯 · 今日</string>
     <string name="widget_wide_name">水杯 · 今日横版</string>
     <string name="widget_small_description">今日进度与一键记录一杯水</string>
-    <string name="widget_wide_description">今日进度、最近获得的徽章与一键记录</string>
+    <string name="widget_wide_description">今日进度、快捷记录与最近获得的徽章</string>
     <string name="widget_today">今日饮水</string>
-    <string name="widget_goal_format">%1$d / %2$d ml</string>
-    <string name="widget_reached">已达标 · 干得漂亮</string>
+    <string name="widget_drink_suffix"> / %1$d ml</string>
+    <string name="widget_drink_suffix_reached"> / %1$d ml · 今日达标</string>
+    <string name="widget_drink_suffix_preview"> / 2000 ml</string>
     <string name="widget_action_format">喝一杯 · %1$d ml</string>
     <string name="widget_badge_label">最近获得</string>
     <string name="widget_badge_none">还没有点亮徽章</string>
     <string name="widget_badge_none_meta">记录一杯即可开始</string>
     <string name="widget_badge_meta">%1$s · %2$s</string>
-    <string name="widget_goal_preview">600 / 2000 ml</string>
     <string name="widget_action_preview">喝一杯 · 200 ml</string>
+    <string name="widget_action_short">喝一杯</string>
     <string name="widget_badge_preview_title">第一杯水</string>
     <string name="widget_badge_preview_meta">青铜 · 11 月 8 日</string>
+    <string name="widget_drunk_label">已喝</string>
+    <string name="widget_ml_unit"> ml</string>
+    <string name="widget_target_format">目标 %1$d ml</string>
+    <string name="widget_remaining_format">还差 %1$d ml · 连续 %2$d 天</string>
+    <string name="widget_remaining_reached">今日达标 · 连续 %1$d 天</string>
+    <string name="widget_value_preview">860</string>
+    <string name="widget_percent_preview">43%</string>
+    <string name="widget_target_preview">目标 2000 ml</string>
+    <string name="widget_remaining_preview">还差 1140 ml · 连续 2 天</string>
+    <string name="widget_quick_preview_150">+ 150</string>
+    <string name="widget_quick_preview_200">+ 200</string>
+    <string name="widget_quick_preview_300">+ 300</string>
+    <string name="widget_quick_preview_500">+ 500</string>
 
     <string-array name="aqua_week_days">
         <item>一</item>

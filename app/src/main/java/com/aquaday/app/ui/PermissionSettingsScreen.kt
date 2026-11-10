@@ -24,6 +24,7 @@ import com.aquaday.app.R
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaDivider
 import com.aquaday.app.ui.components.AquaRow
+import com.itos.coui.icons.CouiIcons
 import com.itos.coui.theme.CouiTheme
 
 @Composable
@@ -51,7 +52,7 @@ fun PermissionSettingsScreen(state: AquaUiState, viewModel: AquaViewModel) {
                 summary = stringResource(
                     if (notifications) R.string.setting_notification_granted_summary else R.string.setting_notification_missing_summary,
                 ),
-                icon = Icons.Filled.NotificationsActive,
+                icon = CouiIcons.Filled.Bell,
                 iconTint = TintPermission,
                 onClick = if (notifications) null else { {
                     if (Build.VERSION.SDK_INT >= 33) {
@@ -95,7 +96,7 @@ fun PermissionSettingsScreen(state: AquaUiState, viewModel: AquaViewModel) {
                 summary = stringResource(
                     if (location) R.string.setting_location_granted_summary else R.string.setting_location_missing_summary,
                 ),
-                icon = Icons.Filled.GpsFixed,
+                icon = CouiIcons.Filled.Location,
                 iconTint = TintSchedule,
                 onClick = if (location) null else { {
                     locationLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)

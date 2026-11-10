@@ -84,6 +84,10 @@ fun HomeScreen(
         .sortedByDescending { it.at }
     var typeFilter by rememberSaveable { mutableStateOf<String?>(null) }
     val types = metrics.snapshot.drinkTypes
+    // 自定义饮品被删除后筛选项失效，回到「全部」避免记录区突然清空。
+    LaunchedEffect(types) {
+        if (typeFilter != null && types.none { it.id == typeFilter }) typeFilter = null
+    }
     val events = if (typeFilter == null) allEvents else allEvents.filter { it.type.id == typeFilter }
     // 圆环跟随每次记录平滑推进，冷启动时也从 0 长到当前进度。
     val animatedRatio by animateFloatAsState(

@@ -148,6 +148,17 @@ class HydrationStore(context: Context) {
         }
     }
 
+    /** 只删自定义类型；记录内嵌了类型快照，历史条目照常显示原名称与图标。 */
+    suspend fun deleteDrinkType(id: String) {
+        store.edit { prefs ->
+            val custom = decodeTypes(prefs[AquaKeys.CUSTOM_TYPES].orEmpty())
+            val remaining = custom.filterNot { it.id == id }
+            if (remaining.size != custom.size) {
+                prefs[AquaKeys.CUSTOM_TYPES] = encodeTypes(remaining)
+            }
+        }
+    }
+
     suspend fun deleteEvent(id: Long) {
         mutateEvents { current -> current.filterNot { it.id == id } }
     }

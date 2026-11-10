@@ -8,7 +8,7 @@ composeBom = "2026.08.01"
 composeFoundation = "1.12.0"
 datastore = "1.2.1"
 work = "2.12.0"
-coui = "0.0.1-alpha7"
+coui = "0.0.1-alpha8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,6 +28,7 @@ compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 coui = { group = "io.github.itoseo", name = "coui", version.ref = "coui" }
 coui-material3 = { group = "io.github.itoseo", name = "coui-material3", version.ref = "coui" }
+coui-icons = { group = "io.github.itoseo", name = "coui-icons", version.ref = "coui" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

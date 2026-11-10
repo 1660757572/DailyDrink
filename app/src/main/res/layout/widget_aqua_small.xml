@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 2×2：标题在上、数值居中，进度条与按钮贴底且底部留白与左右一致；进度条与按钮在渲染时染成强调色。 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_bg_light"
-    android:gravity="center_vertical"
     android:orientation="vertical"
     android:padding="14dp">
 
@@ -20,8 +20,7 @@
             android:layout_height="14dp"
             android:layout_marginEnd="5dp"
             android:contentDescription="@null"
-            android:src="@drawable/ic_widget_drop"
-            android:tint="#0B84FC" />
+            android:src="@drawable/ic_widget_drop" />
 
         <TextView
             android:id="@+id/widget_label"
@@ -42,43 +41,95 @@
             android:layout_height="wrap_content"
             android:text="30%"
             android:textColor="#111114"
-            android:textSize="22sp"
+            android:textSize="21sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/widget_goal"
+    <!-- RemoteViews 只允许白名单容器，用空 FrameLayout 做可伸缩占位。 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:text="@string/widget_goal_preview"
-        android:textColor="#5B5D63"
-        android:textSize="11sp" />
+        android:gravity="bottom"
+        android:orientation="horizontal">
 
-    <ProgressBar
-        android:id="@+id/widget_progress"
-        style="?android:attr/progressBarStyleHorizontal"
+        <TextView
+            android:id="@+id/widget_drink_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:text="@string/widget_value_preview"
+            android:textColor="#111114"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_drink_suffix"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/widget_drink_suffix_preview"
+            android:textColor="#5B5D63"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- 上下两段弹性留白，让数值块在标题与按钮之间居中。 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="5dp"
-        android:layout_marginTop="6dp"
-        android:max="100"
-        android:progress="30"
-        android:progressDrawable="@drawable/widget_progress" />
+        android:layout_marginTop="6dp">
 
-    <TextView
+        <ImageView
+            android:id="@+id/widget_progress_track"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_progress_track" />
+
+        <ImageView
+            android:id="@+id/widget_progress_fill"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_progress_fill" />
+    </FrameLayout>
+
+    <FrameLayout
         android:id="@+id/widget_action"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/widget_action_bg_light"
-        android:ellipsize="end"
-        android:gravity="center"
-        android:maxLines="1"
-        android:paddingTop="6dp"
-        android:paddingBottom="6dp"
-        android:text="@string/widget_action_preview"
-        android:textColor="@android:color/white"
-        android:textSize="12sp" />
+        android:layout_height="32dp"
+        android:layout_marginTop="8dp">
+
+        <ImageView
+            android:id="@+id/widget_action_bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_action_shape" />
+
+        <TextView
+            android:id="@+id/widget_action_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="@string/widget_action_preview"
+            android:textColor="@android:color/white"
+            android:textSize="12sp" />
+    </FrameLayout>
 </LinearLayout>

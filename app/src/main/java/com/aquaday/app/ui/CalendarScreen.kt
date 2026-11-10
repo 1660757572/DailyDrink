@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -125,6 +126,10 @@ fun CalendarScreen(
     val selected = state.selectedDate
     val record = byDay[selected]
     var typeFilter by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(metrics.snapshot.drinkTypes) {
+        val current = typeFilter ?: return@LaunchedEffect
+        if (metrics.snapshot.drinkTypes.none { it.id == current }) typeFilter = null
+    }
     AquaSectionTitle(stringResource(R.string.calendar_section_records))
     DrinkTypeFilter(
         types = metrics.snapshot.drinkTypes,

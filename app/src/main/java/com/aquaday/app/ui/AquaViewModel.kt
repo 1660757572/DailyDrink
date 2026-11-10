@@ -104,6 +104,8 @@ class AquaViewModel(application: Application) : AndroidViewModel(application) {
         repository.updateDrinkType(id, label, iconKey, tintArgb)
     }
 
+    fun deleteDrinkType(id: String) = viewModelScope.launch { repository.deleteDrinkType(id) }
+
     fun deleteEvent(id: Long) = viewModelScope.launch { repository.deleteEvent(id) }
 
     fun setGoal(goalMl: Int) = viewModelScope.launch { repository.setGoal(goalMl) }

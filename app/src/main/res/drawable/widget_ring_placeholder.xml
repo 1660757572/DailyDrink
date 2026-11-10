@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 预览用的占位圆环；实际渲染时换成按选中强调色画出的位图。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="ring"
+    android:innerRadiusRatio="2.7"
+    android:thicknessRatio="10"
+    android:useLevel="false">
+    <solid android:color="#2E0B84FC" />
+</shape>

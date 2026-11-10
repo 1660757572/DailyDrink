@@ -120,6 +120,7 @@ import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.effect.CouiFloatingRenderer
+import com.itos.coui.icons.CouiIcons
 import com.itos.coui.menu.ProvideCouiMenuBackdrop
 import com.itos.coui.navigation.CouiNavigationItem
 import com.itos.coui.navigation.NavigationBar
@@ -269,12 +270,14 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
     val calendarTitle = stringResource(AquaPage.Calendar.titleRes)
     val medalsTitle = stringResource(AquaPage.Medals.titleRes)
     val mineTitle = stringResource(AquaPage.Mine.titleRes)
-    val items = remember(homeTitle, calendarTitle, medalsTitle, mineTitle) {
+    val medalsIcon = CouiIcons.Filled.Certificate
+    val mineIcon = CouiIcons.Filled.UserCircle
+    val items = remember(homeTitle, calendarTitle, medalsTitle, mineTitle, medalsIcon, mineIcon) {
         listOf(
             CouiNavigationItem(homeTitle, Icons.Outlined.Home, Icons.Filled.Home),
             CouiNavigationItem(calendarTitle, Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
-            CouiNavigationItem(medalsTitle, Icons.Outlined.EmojiEvents, Icons.Filled.EmojiEvents),
-            CouiNavigationItem(mineTitle, Icons.Outlined.Person, Icons.Filled.Person),
+            CouiNavigationItem(medalsTitle, medalsIcon, medalsIcon),
+            CouiNavigationItem(mineTitle, mineIcon, mineIcon),
         )
     }
     val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 56.dp
@@ -464,7 +467,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             TopAppBarButton(onClick = onBack) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    imageVector = CouiIcons.Filled.Back,
                                     contentDescription = stringResource(R.string.action_back),
                                     modifier = Modifier.size(22.dp),
                                 )
@@ -472,7 +475,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                         } else {
                             IconButton(onClick = onBack) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    imageVector = CouiIcons.Filled.Back,
                                     contentDescription = stringResource(R.string.action_back),
                                     modifier = Modifier.size(22.dp),
                                 )
@@ -502,7 +505,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                             selectedIndex = AquaPage.entries.indexOf(page),
                             // 视图切换用底栏的左附件，与右附件共用 COUI 的附件收拢动效；
                             // 隐藏期间照样传入参数，只切 leftVisible，否则没有内容可收，退场动画就没了。
-                            leftIcon = if (medalGrid) Icons.Filled.List else Icons.Filled.GridView,
+                            leftIcon = if (medalGrid) Icons.Filled.List else CouiIcons.Filled.Grid,
                             leftDescription = stringResource(
                                 if (medalGrid) R.string.medal_view_list else R.string.medal_view_grid,
                             ),
@@ -510,7 +513,7 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                             onLeftClick = { medalGrid = !medalGrid },
                             // 加号用底栏的右附件：退场由 COUI 的附件收拢驱动。隐藏期间照样传入附件参数，
                             // 只切 rightVisible，否则附件没有内容可收，退场动画就没了。
-                            rightIcon = Icons.Filled.Add,
+                            rightIcon = CouiIcons.Filled.Add,
                             rightDescription = stringResource(R.string.action_add),
                             rightVisible = fabVisible,
                             onRightClick = { addOpen = true },
@@ -541,7 +544,8 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                     backdrop = backdrop,
                     dark = dark,
                     onDismiss = { addOpen = false },
-                    onCreateType = { label -> viewModel.addDrinkType(label) },
+                    // 新建后直接进编辑器，名称、图标与颜色一次配好。
+                    onCreateType = { label -> viewModel.addDrinkType(label) { created -> editorTypeId = created.id } },
                     onEditType = { editorTypeId = it.id },
                     onConfirm = { amount, type, at ->
                         viewModel.addDrink(amount, type, at)
@@ -551,22 +555,22 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
             }
 
             editorTypeId?.let { id ->
-                val editing = state.metrics?.snapshot?.drinkTypes?.firstOrNull { it.id == id }
-                if (editing == null) {
-                    // 类型可能被清空数据后移除，直接关掉弹窗避免停留在空引用上。
-                    LaunchedEffect(id) { editorTypeId = null }
-                } else {
-                    DrinkTypeEditorDialog(
-                        type = editing,
-                        backdrop = backdrop,
-                        dark = dark,
-                        onDismiss = { editorTypeId = null },
-                        onSave = { label, iconKey, tint ->
-                            viewModel.updateDrinkType(editing.id, label, iconKey, tint)
-                            editorTypeId = null
-                        },
-                    )
-                }
+                // 新建的类型要等 DataStore 回流后才出现，这里不要提前清空 id，否则编辑器一闪即过。
+                val editing = state.metrics?.snapshot?.drinkTypes?.firstOrNull { it.id == id } ?: return@let
+                DrinkTypeEditorDialog(
+                    type = editing,
+                    backdrop = backdrop,
+                    dark = dark,
+                    onDismiss = { editorTypeId = null },
+                    onSave = { label, iconKey, tint ->
+                        viewModel.updateDrinkType(editing.id, label, iconKey, tint)
+                        editorTypeId = null
+                    },
+                    onDelete = {
+                        viewModel.deleteDrinkType(editing.id)
+                        editorTypeId = null
+                    },
+                )
             }
         }
     }
@@ -645,12 +649,13 @@ private fun AquaSubpage.sharedKey(): String = when (this) {
     AquaSubpage.About -> AquaSharedKeys.About
 }
 
+@Composable
 private fun AquaSubpage.icon(): ImageVector = when (this) {
     AquaSubpage.Reminder -> Icons.Filled.Alarm
-    AquaSubpage.Permission -> Icons.Filled.NotificationsActive
-    AquaSubpage.Appearance -> Icons.Filled.DarkMode
-    AquaSubpage.Profile -> Icons.Filled.Person
-    AquaSubpage.About -> Icons.Filled.Info
+    AquaSubpage.Permission -> CouiIcons.Filled.Bell
+    AquaSubpage.Appearance -> CouiIcons.Filled.DarkLight
+    AquaSubpage.Profile -> CouiIcons.Filled.UserCircle
+    AquaSubpage.About -> CouiIcons.Filled.BookOpen
 }
 
 private fun AquaSubpage.tint(): Color = when (this) {

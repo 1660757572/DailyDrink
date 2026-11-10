@@ -33,6 +33,7 @@ import com.aquaday.app.ui.components.AquaChip
 import com.aquaday.app.ui.components.AquaRow
 import com.aquaday.app.ui.components.AquaSectionTitle
 import com.aquaday.app.ui.components.AvatarCropDialog
+import com.itos.coui.icons.CouiIcons
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.CouiDialogActionStyle
@@ -114,7 +115,7 @@ fun ProfileScreen(
         AquaRow(
             title = profileDisplayName(snapshot.nickname),
             summary = stringResource(R.string.profile_nickname_hint),
-            icon = Icons.Filled.Person,
+            icon = CouiIcons.Filled.UserCircle,
             onClick = {
                 draft = TextFieldValue(snapshot.nickname)
                 editorOpen = true

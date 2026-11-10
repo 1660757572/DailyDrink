@@ -77,6 +77,7 @@ fun HomeScreen(
     onEditType: (DrinkType) -> Unit,
 ) {
     val metrics = state.metrics ?: return
+    val haptics = LocalHaptics.current
     val today = metrics.today
     val goal = metrics.snapshot.goalMl
     val allEvents = metrics.snapshot.events
@@ -193,7 +194,10 @@ fun HomeScreen(
                 AquaChip(
                     text = "+ $amount",
                     selected = false,
-                    onClick = { viewModel.addDrink(amount) },
+                    onClick = {
+                        haptics.tap()
+                        viewModel.addDrink(amount)
+                    },
                     modifier = Modifier.weight(1f),
                     // 等分宽度下内边距收窄并强制单行，避免比例字体把「+ 200」挤成两行。
                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 9.dp),
@@ -206,7 +210,10 @@ fun HomeScreen(
             text = stringResource(R.string.action_add),
             icon = Icons.Filled.LocalDrink,
             // 大按钮一键记录「默认一杯容量」，需要改容量或饮品时走右下角加号。
-            onClick = { viewModel.addDrink(metrics.snapshot.settings.defaultCupMl) },
+            onClick = {
+                haptics.tap()
+                viewModel.addDrink(metrics.snapshot.settings.defaultCupMl)
+            },
             backdrop = backdrop,
             dark = dark,
         )

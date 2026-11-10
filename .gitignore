@@ -49,3 +49,6 @@ keystore/
 .tools/
 
 .DS_Store
+
+# 本地验证截图，不入库
+shots/

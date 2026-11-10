@@ -49,6 +49,9 @@ const val MIN_CONTAINER_OPACITY = 0.4f
 /** 强调色方案：固定模板之外还有跟随壁纸与用户自选。 */
 enum class ColorStyle { Default, Dynamic, Grass, Lemon, Mono, Custom }
 
+/** 界面触感反馈的力度，映射到系统的预设振动效果。 */
+enum class HapticLevel { Light, Standard, Strong }
+
 data class ReminderSettings(
     val enabled: Boolean = true,
     val intervalMinutes: Int = 60,
@@ -57,6 +60,8 @@ data class ReminderSettings(
     val liveActivityEnabled: Boolean = true,
     val soundEnabled: Boolean = true,
     val vibrateEnabled: Boolean = true,
+    val hapticsEnabled: Boolean = true,
+    val hapticLevel: HapticLevel = HapticLevel.Standard,
     val defaultCupMl: Int = 200,
 )
 

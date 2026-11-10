@@ -39,8 +39,8 @@ object AquaWidgets {
     private const val DARK_SECONDARY = 0xFFA1A1A6.toInt()
 
     private const val TRACK_ALPHA = 0x2E
-    private const val RING_SIZE_DP = 108f
-    private const val RING_STROKE_DP = 10f
+    private const val RING_SIZE_DP = 100f
+    private const val RING_STROKE_DP = 9f
 
     /** 数据变化后由界面层顺带刷新，省一次独立的 DataStore 读取。 */
     fun updateAll(context: Context, metrics: AquaMetrics) {
@@ -139,7 +139,7 @@ object AquaWidgets {
         views.setInt(R.id.widget_progress_fill, "setImageLevel", percent * 100)
     }
 
-    /** 4×2：首页大卡片的结构——圆环 + 已喝/目标/剩余/连续 + 最近徽章 + 快捷容量。 */
+    /** 4×2：首页大卡片的结构——圆环（进度在右上角）+ 已喝/剩余/连续 + 最近徽章 + 快捷容量。 */
     private fun bindWide(
         context: Context,
         views: RemoteViews,
@@ -156,8 +156,6 @@ object AquaWidgets {
         // 小组件里不能实例化应用自定义 Drawable，圆环只能画成位图再交给 ImageView。
         views.setImageViewBitmap(R.id.widget_ring, ringBitmap(context, percent, accent))
 
-        views.setTextViewText(R.id.widget_target, context.getString(R.string.widget_target_format, snapshot.goalMl))
-        views.setTextColor(R.id.widget_target, secondary)
         views.setTextViewText(R.id.widget_drink_value, metrics.today.totalMl.toString())
         views.setTextColor(R.id.widget_drink_value, primary)
         val remain = (snapshot.goalMl - metrics.today.totalMl).coerceAtLeast(0)

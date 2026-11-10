@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.VolumeUp
@@ -20,8 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.aquaday.app.R
+import com.aquaday.app.data.HapticLevel
 import com.aquaday.app.ui.components.AquaCard
 import com.aquaday.app.ui.components.AquaDivider
+import com.aquaday.app.ui.components.AquaSegmented
 import com.aquaday.app.ui.components.AquaSliderRow
 import com.aquaday.app.ui.components.AquaStepperRow
 import com.aquaday.app.ui.components.AquaSwitchRow
@@ -114,10 +117,40 @@ fun ReminderSettingsScreen(state: AquaUiState, viewModel: AquaViewModel) {
             AquaSwitchRow(
                 title = stringResource(R.string.setting_vibrate),
                 checked = settings.vibrateEnabled,
-                icon = Icons.Filled.Vibration,
+                icon = Icons.Filled.NotificationsActive,
                 iconTint = TintVibrate,
                 onCheckedChange = { enabled -> viewModel.updateSettings { it.copy(vibrateEnabled = enabled) } },
             )
+            AquaDivider()
+            AquaSwitchRow(
+                title = stringResource(R.string.setting_haptics),
+                summary = stringResource(R.string.setting_haptics_summary),
+                checked = settings.hapticsEnabled,
+                icon = Icons.Filled.Vibration,
+                iconTint = TintHaptics,
+                onCheckedChange = { enabled -> viewModel.updateSettings { it.copy(hapticsEnabled = enabled) } },
+            )
+            if (settings.hapticsEnabled) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    Text(
+                        text = stringResource(R.string.setting_haptic_level),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 6.dp),
+                    )
+                    AquaSegmented(
+                        options = listOf(
+                            stringResource(R.string.haptic_level_light),
+                            stringResource(R.string.haptic_level_standard),
+                            stringResource(R.string.haptic_level_strong),
+                        ),
+                        selectedIndex = settings.hapticLevel.ordinal,
+                        onSelect = { index ->
+                            viewModel.updateSettings { it.copy(hapticLevel = HapticLevel.entries[index]) }
+                        },
+                    )
+                }
+            }
         }
     }
 }

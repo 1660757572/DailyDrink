@@ -31,6 +31,8 @@ private object AquaKeys {
     val LIVE_ON = intPreferencesKey("live_activity_on")
     val SOUND_ON = intPreferencesKey("sound_on")
     val VIBRATE_ON = intPreferencesKey("vibrate_on")
+    val HAPTICS_ON = intPreferencesKey("haptics_on")
+    val HAPTIC_LEVEL = intPreferencesKey("haptic_level")
     val LAST_REMINDER = longPreferencesKey("last_reminder_at")
     val CUSTOM_TYPES = stringPreferencesKey("custom_types")
     val TYPE_STYLES = stringPreferencesKey("type_styles")
@@ -76,6 +78,8 @@ class HydrationStore(context: Context) {
                     liveActivityEnabled = (prefs[AquaKeys.LIVE_ON] ?: 1) == 1,
                     soundEnabled = (prefs[AquaKeys.SOUND_ON] ?: 1) == 1,
                     vibrateEnabled = (prefs[AquaKeys.VIBRATE_ON] ?: 1) == 1,
+                    hapticsEnabled = (prefs[AquaKeys.HAPTICS_ON] ?: 1) == 1,
+                    hapticLevel = HapticLevel.entries.getOrElse(prefs[AquaKeys.HAPTIC_LEVEL] ?: 1) { HapticLevel.Standard },
                     defaultCupMl = (prefs[AquaKeys.DEFAULT_CUP] ?: DEFAULT_CUP_ML).coerceIn(50, 1000),
                 ),
                 unlocked = decodeUnlocked(prefs[AquaKeys.UNLOCKED].orEmpty()),
@@ -231,6 +235,8 @@ class HydrationStore(context: Context) {
             prefs[AquaKeys.LIVE_ON] = if (next.liveActivityEnabled) 1 else 0
             prefs[AquaKeys.SOUND_ON] = if (next.soundEnabled) 1 else 0
             prefs[AquaKeys.VIBRATE_ON] = if (next.vibrateEnabled) 1 else 0
+            prefs[AquaKeys.HAPTICS_ON] = if (next.hapticsEnabled) 1 else 0
+            prefs[AquaKeys.HAPTIC_LEVEL] = next.hapticLevel.ordinal
             prefs[AquaKeys.DEFAULT_CUP] = next.defaultCupMl.coerceIn(50, 1000)
         }
     }
@@ -291,6 +297,8 @@ class HydrationStore(context: Context) {
         liveActivityEnabled = (prefs[AquaKeys.LIVE_ON] ?: 1) == 1,
         soundEnabled = (prefs[AquaKeys.SOUND_ON] ?: 1) == 1,
         vibrateEnabled = (prefs[AquaKeys.VIBRATE_ON] ?: 1) == 1,
+        hapticsEnabled = (prefs[AquaKeys.HAPTICS_ON] ?: 1) == 1,
+        hapticLevel = HapticLevel.entries.getOrElse(prefs[AquaKeys.HAPTIC_LEVEL] ?: 1) { HapticLevel.Standard },
         defaultCupMl = prefs[AquaKeys.DEFAULT_CUP] ?: DEFAULT_CUP_ML,
     )
 

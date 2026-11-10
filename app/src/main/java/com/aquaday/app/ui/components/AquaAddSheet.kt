@@ -33,6 +33,7 @@ import com.aquaday.app.ui.aquaPrimaryActionColors
 import com.aquaday.app.data.DrinkType
 import com.aquaday.app.ui.asClock
 import com.aquaday.app.ui.DrinkIcons
+import com.aquaday.app.ui.LocalHaptics
 import com.itos.coui.icons.CouiIcons
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.dialog.CouiDialogAction
@@ -78,6 +79,7 @@ fun AquaAddSheet(
     val effective = (rounded * type.factor).roundToInt()
     val time = LocalTime.of(minutes / 60, minutes % 60)
     val accent = CouiTheme.colorScheme.accent
+    val haptics = LocalHaptics.current
 
     LaunchedEffect(types, pendingLabel) {
         val wanted = pendingLabel ?: return@LaunchedEffect
@@ -94,7 +96,10 @@ fun AquaAddSheet(
         message = stringResource(R.string.dialog_add_hint, goalMl),
         confirmAction = CouiDialogAction(
             text = stringResource(R.string.dialog_add_submit, rounded),
-            onClick = { onConfirm(rounded, type, LocalDateTime.of(now.toLocalDate(), time)) },
+            onClick = {
+                haptics.tap()
+                onConfirm(rounded, type, LocalDateTime.of(now.toLocalDate(), time))
+            },
             style = CouiDialogActionStyle.Primary,
             colors = aquaPrimaryActionColors(accent),
         ),
@@ -123,7 +128,10 @@ fun AquaAddSheet(
                         AquaChip(
                             text = "+ $quick",
                             selected = rounded == quick,
-                            onClick = { amount = quick.toFloat() },
+                            onClick = {
+                                haptics.tap()
+                                amount = quick.toFloat()
+                            },
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 9.dp),
                             maxLines = 1,
@@ -148,7 +156,10 @@ fun AquaAddSheet(
                             AquaChip(
                                 text = option.label,
                                 selected = option.id == selectedId,
-                                onClick = { selectedId = option.id },
+                                onClick = {
+                                    haptics.tap()
+                                    selectedId = option.id
+                                },
                                 leading = DrinkIcons.vector(option.iconKey),
                                 // 只在自定义色时着色；跟随强调色时交给芯片自身的选中配色。
                                 leadingTint = option.tintArgb?.let { Color(it) },

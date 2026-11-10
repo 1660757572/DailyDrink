@@ -187,7 +187,8 @@ fun AquaApp(
     // COUI 菜单的背景材质只能由 ProvideCouiMenuBackdrop 注入（取样 CompositionLocal 是库内私有的）。
     // 采样源只在菜单展开期间挂上，避免常驻的第三层全屏离屏录制增加每帧开销。
     val menuGate = remember { MenuBackdropGate() }
-    CompositionLocalProvider(LocalMenuBackdropGate provides menuGate) {
+    val haptics = rememberAquaHaptics(snapshot?.settings)
+    CompositionLocalProvider(LocalMenuBackdropGate provides menuGate, LocalHaptics provides haptics) {
         ProvideCouiMenuBackdrop(isolateContent = false) { menuSource ->
             Box(
                 Modifier.fillMaxSize().then(
@@ -215,6 +216,7 @@ fun AquaApp(
 @Composable
 private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolean) {
     val context = LocalContext.current
+    val haptics = LocalHaptics.current
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshPermissions() }
     var pageIndex by rememberSaveable { mutableIntStateOf(0) }
     var subpageIndex by rememberSaveable { mutableIntStateOf(-1) }
@@ -510,23 +512,35 @@ private fun AquaShell(state: AquaUiState, viewModel: AquaViewModel, dark: Boolea
                                 if (medalGrid) R.string.medal_view_list else R.string.medal_view_grid,
                             ),
                             leftVisible = page == AquaPage.Medals,
-                            onLeftClick = { medalGrid = !medalGrid },
+                            onLeftClick = {
+                                haptics.tap()
+                                medalGrid = !medalGrid
+                            },
                             // 加号用底栏的右附件：退场由 COUI 的附件收拢驱动。隐藏期间照样传入附件参数，
                             // 只切 rightVisible，否则附件没有内容可收，退场动画就没了。
                             rightIcon = CouiIcons.Filled.Add,
                             rightDescription = stringResource(R.string.action_add),
                             rightVisible = fabVisible,
-                            onRightClick = { addOpen = true },
+                            onRightClick = {
+                                haptics.tap()
+                                addOpen = true
+                            },
                             // 附件图标固定为白色，底色沿用强调色，只有接近纯白时才回退。
                             rightContainerColor = fabContainerColor(CouiTheme.colorScheme.accent),
                             // 白色焦散在浅色页面上会糊出一圈方块光晕；rgb 保留给边缘高光，alpha 置零关掉焦散。
                             lightColor = Color.White.copy(alpha = 0f),
                             themeTint = MaterialTheme.colorScheme.background,
                             dark = dark,
-                            onSelection = { pageIndex = it.coerceIn(0, AquaPage.entries.lastIndex) },
+                            onSelection = { index ->
+                                haptics.tap()
+                                pageIndex = index.coerceIn(0, AquaPage.entries.lastIndex)
+                            },
                         )
                     } else {
-                        PlainTabBar(items, AquaPage.entries.indexOf(page)) { pageIndex = it }
+                        PlainTabBar(items, AquaPage.entries.indexOf(page)) { index ->
+                            haptics.tap()
+                            pageIndex = index
+                        }
                     }
                 }
             }

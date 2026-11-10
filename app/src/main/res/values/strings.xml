@@ -152,7 +152,13 @@
     <string name="setting_live_summary">常驻通知显示进度与倒计时</string>
     <string name="setting_live_hint">如果没有正常显示，在通知设置里检查是否允许「流体云显示实时活动」</string>
     <string name="setting_sound">提示音</string>
-    <string name="setting_vibrate">震动</string>
+    <string name="setting_vibrate">提醒震动</string>
+    <string name="setting_haptics">触感反馈</string>
+    <string name="setting_haptics_summary">喝一杯、切换页面等关键操作时振动</string>
+    <string name="setting_haptic_level">震动力度</string>
+    <string name="haptic_level_light">轻</string>
+    <string name="haptic_level_standard">标准</string>
+    <string name="haptic_level_strong">强</string>
     <string name="setting_theme">外观模式</string>
     <string name="setting_theme_system">跟随系统</string>
     <string name="setting_theme_light">浅色</string>
@@ -342,12 +348,10 @@
     <string name="widget_badge_preview_meta">青铜 · 11 月 8 日</string>
     <string name="widget_drunk_label">已喝</string>
     <string name="widget_ml_unit"> ml</string>
-    <string name="widget_target_format">目标 %1$d ml</string>
     <string name="widget_remaining_format">还差 %1$d ml · 连续 %2$d 天</string>
     <string name="widget_remaining_reached">今日达标 · 连续 %1$d 天</string>
     <string name="widget_value_preview">860</string>
     <string name="widget_percent_preview">43%</string>
-    <string name="widget_target_preview">目标 2000 ml</string>
     <string name="widget_remaining_preview">还差 1140 ml · 连续 2 天</string>
     <string name="widget_quick_preview_150">+ 150</string>
     <string name="widget_quick_preview_200">+ 200</string>

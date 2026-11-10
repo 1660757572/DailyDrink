@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 4×2：把首页那张大卡片原样搬到桌面——圆环进度、已喝/目标/剩余/连续、
-     快捷容量与「喝一杯」。圆环用 RingProgressDrawable 接收 percent 的 level。 -->
+<!-- 4×2：把首页那张大卡片原样搬到桌面——圆环进度、已喝/剩余/连续、快捷容量与「喝一杯」。
+     圆环按行高自适应（fitCenter），因为不同桌面的 4×2 格子高度差很多，固定尺寸会被裁切。 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -37,13 +37,14 @@
             android:layout_weight="1" />
 
         <TextView
-            android:id="@+id/widget_target"
+            android:id="@+id/widget_percent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:text="@string/widget_target_preview"
-            android:textColor="#5B5D63"
-            android:textSize="11sp" />
+            android:text="@string/widget_percent_preview"
+            android:textColor="#111114"
+            android:textSize="21sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
@@ -54,34 +55,18 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <FrameLayout
-            android:layout_width="108dp"
-            android:layout_height="108dp">
-
-            <ImageView
-                android:id="@+id/widget_ring"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@null"
-                android:scaleType="fitXY"
-                android:src="@drawable/widget_ring_placeholder" />
-
-            <TextView
-                android:id="@+id/widget_percent"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:maxLines="1"
-                android:text="@string/widget_percent_preview"
-                android:textColor="#111114"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-        </FrameLayout>
+        <ImageView
+            android:id="@+id/widget_ring"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/widget_ring_placeholder" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -102,17 +87,18 @@
                     android:id="@+id/widget_drink_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
                     android:maxLines="1"
                     android:text="@string/widget_value_preview"
                     android:textColor="#111114"
-                    android:textSize="30sp"
+                    android:textSize="26sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="3dp"
-                    android:paddingBottom="3dp"
+                    android:paddingBottom="2dp"
                     android:text="@string/widget_ml_unit"
                     android:textColor="#5B5D63"
                     android:textSize="12sp" />
@@ -122,7 +108,7 @@
                 android:id="@+id/widget_remaining"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
+                android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="@string/widget_remaining_preview"
@@ -132,7 +118,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
+                android:layout_marginTop="2dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
